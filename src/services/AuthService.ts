@@ -1,5 +1,5 @@
 // services/authService.ts
-import { apiAuth } from "@/api/apiAuth";
+import { apiClient } from "@/infra/ApiClient";
 import TokenService from "./TokenManagerService";
 
 interface User {
@@ -20,7 +20,7 @@ interface LoginResponse {
 
 const authService = {
     login: async (credentials: Credentials): Promise<LoginResponse> => {
-        const response = await apiAuth.post<LoginResponse>(
+        const response = await apiClient.post<LoginResponse>(
             "/login/",
             credentials
         );
@@ -36,7 +36,7 @@ const authService = {
         try {
             const refreshToken = TokenService.getRefreshToken();
 
-            const response = await apiAuth.post("token/blacklist/", {
+            const response = await apiClient.post("token/blacklist/", {
                 refresh: refreshToken,
             });
             return response.data;
@@ -47,7 +47,7 @@ const authService = {
     refreshAccessToken: async (): Promise<{ access: string } | undefined> => {
         try {
             const refreshToken = TokenService.getRefreshToken();
-            const response = await apiAuth.post<LoginResponse>(
+            const response = await apiClient.post<LoginResponse>(
                 "token/refresh/",
                 {
                     refresh: refreshToken,
