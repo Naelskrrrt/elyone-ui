@@ -1,0 +1,77 @@
+table,
+.divTable {
+    height: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    /* padding-bottom: 20px; */
+    padding-bottom: 15px;
+}
+
+.tr {
+    display: flex;
+}
+
+tr,
+.tr {
+    width: fit-content;
+    height: fit-content;
+}
+
+th,
+.th,
+td,
+.td {
+    padding-left: 15px;
+    border-bottom: 1px solid #00000013;
+    display: flex;
+    align-items: center;
+}
+
+th,
+.th {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    position: relative;
+    font-weight: bold;
+    background: #ebf5fc;
+    border-bottom: 1px solid #d7e5f0;
+}
+
+td,
+.td {
+    height: 50px;
+    background: #fff;
+}
+
+.resizer {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    right: 0;
+    width: 5px;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: col-resize;
+    user-select: none;
+    touch-action: none;
+}
+
+.tbody {
+    height: fit-content;
+    /* position: relative; */
+    /* overflow-y: scroll; */
+}
+
+.resizer.isResizing {
+    background: #006fee;
+    opacity: 1;
+}
+
+@media (hover: hover) {
+    .resizer {
+        opacity: 0;
+    }
+
+    *:hover > .resizer {
+        opacity: 1;
+    }
+}
