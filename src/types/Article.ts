@@ -1,12 +1,12 @@
 // types/Article.ts
 export interface Article {
-    reference_article?: string;
-    designation_article?: string;
-    code_famille?: string;
-    prix_vente?: string;
-    prix_ttc?: string;
-    mise_en_sommeil?: number;
-    dernier_prix_achat?: string;
+    reference_article?: string; //
+    designation_article?: string; //
+    code_famille?: string; //
+    prix_vente?: string; //
+    prix_ttc?: string; //
+    mise_en_sommeil?: number; //
+    dernier_prix_achat?: string; //
     prix_achat1?: string;
     remise_client?: string | null;
     categorie_article?: string | null;
@@ -45,15 +45,18 @@ export interface Article {
 }
 
 export type FetchArticlesParams = {
+    deal_id: string;
+    hubspot_id: string;
     ct_num: string;
     filter?: { [key: string]: string };
     search?: string;
     page?: number;
     per_page?: number;
-    sqlOrder?: "ASC" | "DESC";
+    sqlOrder?: { [key: string]: "ASC" | "DESC" };
 };
 
 export interface FetchArticlesResponse {
     articles: Article[];
     total: number;
+    empty_columns: { [key: string]: string };
 }

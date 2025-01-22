@@ -12,7 +12,16 @@ const apiClient = axios.create({
 export const fetchArticles = async (
     params: FetchArticlesParams
 ): Promise<FetchArticlesResponse> => {
-    const { ct_num, filter, search, page, per_page, sqlOrder } = params;
+    const {
+        ct_num,
+        filter,
+        search,
+        page,
+        per_page,
+        sqlOrder,
+        hubspot_id,
+        deal_id,
+    } = params;
 
     const response = await apiClient.get<FetchArticlesResponse>("/articles", {
         params: {
@@ -22,6 +31,8 @@ export const fetchArticles = async (
             page,
             per_page,
             sqlOrder,
+            hubspot_id,
+            deal_id,
         },
     });
 

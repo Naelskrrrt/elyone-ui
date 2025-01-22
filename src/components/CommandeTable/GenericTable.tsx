@@ -1,41 +1,39 @@
 import React, { CSSProperties } from "react";
-import ReactDOM from "react-dom/client";
 
 import "./index.css";
 
 import {
-    useReactTable,
-    getCoreRowModel,
-    ColumnDef,
-    flexRender,
-    Table,
-    Row,
-} from "@tanstack/react-table";
-import { makeData } from "./makeData";
-import {
+    closestCenter,
     DndContext,
+    type DragEndEvent,
     KeyboardSensor,
     MouseSensor,
     TouchSensor,
-    closestCenter,
-    type DragEndEvent,
     type UniqueIdentifier,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
+import {
+    ColumnDef,
+    flexRender,
+    getCoreRowModel,
+    Row,
+    Table,
+    useReactTable,
+} from "@tanstack/react-table";
 
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 import {
-    arrayMove,
     SortableContext,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { Button } from "../ui/button";
+import Loader from "../loader/loader";
+import { Input } from "../ui/input";
+import { Article } from "@/types/Article";
 
 export type Person = {
     userId: string;
@@ -47,27 +45,39 @@ export type Person = {
     progress: number;
 };
 
-const DraggableRow = ({ row }: { row: Row<Person> }) => {
+const DraggableRow = ({
+    row,
+    hideKeys,
+}: {
+    row: Row<Person>;
+    hideKeys: string[];
+}) => {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
         id: row.original.userId,
     });
 
     const style: CSSProperties = {
-        transform: CSS.Transform.toString(transform), //let dnd-kit do its thing
+        transform: CSS.Transform.toString(transform),
         transition: transition,
         opacity: isDragging ? 0.8 : 1,
         zIndex: isDragging ? 1 : 0,
         position: "relative",
         display: "flex",
     };
+
     return (
-        // connect row ref to dnd-kit, apply important styles
         <tr ref={setNodeRef} style={style}>
-            {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} style={{ width: cell.column.getSize() }}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-            ))}
+            {row
+                .getVisibleCells()
+                .filter((cell) => !hideKeys.includes(cell.column.id)) // Exclure les colonnes masquées
+                .map((cell) => (
+                    <td key={cell.id} style={{ width: cell.column.getSize() }}>
+                        {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                        )}
+                    </td>
+                ))}
         </tr>
     );
 };
@@ -77,27 +87,40 @@ export default function GenericTable({
     data,
     dataId,
     handleDragEnd,
-}: {
+    isLoading,
+    handleFilterChange,
+    filters,
+    showFilters,
+    hideKeys,
+}: // columnVisibility,
+// setColumnVisibility,
+{
     columns: ColumnDef<any>[];
     data: any;
     dataId?: UniqueIdentifier[];
     handleDragEnd: (event: DragEndEvent) => void;
+    isLoading: boolean;
+    handleFilterChange: (key: string, value: string) => void;
+    filters: Record<string, string>;
+    showFilters?: boolean;
+    hideKeys: string[];
+    // columnVisibility: any;
+    // setColumnVisibility: any;
 }) {
     const rerender = React.useReducer(() => ({}), {})[1];
 
     const table = useReactTable({
         data,
         columns,
+
         defaultColumn: {
             minSize: 50,
             maxSize: 800,
         },
+        // onColumnVisibilityChange: setColumnVisibility,
         columnResizeMode: "onChange",
         getCoreRowModel: getCoreRowModel(),
         getRowId: (row) => row.userId, //required because row indexes will change
-        debugTable: true,
-        debugHeaders: true,
-        debugColumns: true,
     });
 
     // reorder rows after drag & drop
@@ -113,6 +136,12 @@ export default function GenericTable({
         const colSizes: { [key: string]: number } = {};
         for (let i = 0; i < headers.length; i++) {
             const header = headers[i]!;
+            console.log(header);
+            if (hideKeys.includes(header.column.id)) {
+                colSizes[`--header-${header.id}-size`] = 0;
+                colSizes[`--col-${header.column.id}-size`] = 0;
+            }
+
             colSizes[`--header-${header.id}-size`] = header.getSize();
             colSizes[`--col-${header.column.id}-size`] =
                 header.column.getSize();
@@ -132,14 +161,6 @@ export default function GenericTable({
         >
             {/* <div className="h-4" />({data.length} rows) */}
             <div className="flex flex-col w-full h-full gap-2 overflow-x-auto py-1 ">
-                <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50">
-                    <Button className="bg-slate-500 hover:bg-slate-500/90">
-                        Afficher les Filtres
-                    </Button>
-                    <Button title="Colonne à afficher dans le tableau">
-                        Colonnes
-                    </Button>
-                </div>
                 <div
                     {...{
                         className: "divTable",
@@ -157,50 +178,135 @@ export default function GenericTable({
                                     className: "tr",
                                 }}
                             >
-                                {headerGroup.headers.map((header) => (
-                                    <div
-                                        {...{
-                                            key: header.id,
-                                            className: "th",
-                                            style: {
-                                                width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                                            },
-                                        }}
-                                        // className="bg-sky-50"
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext()
-                                              )}
+                                {headerGroup.headers.map((header) => {
+                                    console.log(hideKeys);
+                                    if (hideKeys.includes(header.id)) {
+                                        // return null; // Ignore cette colonne
+                                        return null;
+                                    }
+                                    return (
                                         <div
                                             {...{
-                                                onDoubleClick: () =>
-                                                    header.column.resetSize(),
-                                                onMouseDown:
-                                                    header.getResizeHandler(),
-                                                onTouchStart:
-                                                    header.getResizeHandler(),
-                                                className: `resizer ${
-                                                    header.column.getIsResizing()
-                                                        ? "isResizing"
-                                                        : ""
-                                                }`,
+                                                key: header.id,
+                                                className: "th",
+                                                style: {
+                                                    width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                                                },
                                             }}
-                                        />
-                                    </div>
-                                ))}
+                                            // className="bg-sky-50"
+                                        >
+                                            <div className="flex flex-col gap-1 items-start pr-2">
+                                                <h1>
+                                                    {header.isPlaceholder
+                                                        ? null
+                                                        : flexRender(
+                                                              header.column
+                                                                  .columnDef
+                                                                  .header,
+                                                              header.getContext()
+                                                          )}
+                                                </h1>
+                                            </div>
+                                            <div
+                                                {...{
+                                                    onDoubleClick: () =>
+                                                        header.column.resetSize(),
+                                                    onMouseDown:
+                                                        header.getResizeHandler(),
+                                                    onTouchStart:
+                                                        header.getResizeHandler(),
+                                                    className: `resizer ${
+                                                        header.column.getIsResizing()
+                                                            ? "isResizing"
+                                                            : ""
+                                                    }`,
+                                                }}
+                                            />
+                                        </div>
+                                    );
+                                })}
                             </div>
                         ))}
                     </div>
+                    <div className={showFilters ? "block thead" : "hidden"}>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <div
+                                {...{
+                                    key: headerGroup.id,
+                                    className: "tr",
+                                }}
+                            >
+                                {headerGroup.headers.map((header, i) => {
+                                    // Vérifie si l'id du header est dans le tableau des ids à exclure
+
+                                    if (hideKeys.includes(header.id)) {
+                                        // return null; // Ignore cette colonne
+                                        return null;
+                                    }
+
+                                    return (
+                                        <div
+                                            {...{
+                                                key: header.id,
+                                                className: "th",
+                                                style: {
+                                                    width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                                                },
+                                            }}
+                                            className="bg-slate-50 pl-3"
+                                        >
+                                            <div className="flex flex-col gap-1 items-start pr-2 py-2">
+                                                {header.column.columnDef.id ===
+                                                "checkbox" ? (
+                                                    ""
+                                                ) : (
+                                                    <Input
+                                                        className="text-sm font-medium text-slate-500"
+                                                        placeholder={
+                                                            header.column
+                                                                .columnDef
+                                                                .header + "..."
+                                                        }
+                                                        value={
+                                                            filters[i - 1] || ""
+                                                        }
+                                                        onChange={(e) => {
+                                                            handleFilterChange(
+                                                                (
+                                                                    i - 1
+                                                                ).toString(),
+                                                                e.currentTarget
+                                                                    .value
+                                                            );
+                                                        }}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ))}
+                    </div>
+
                     {/* When resizing any column we will render this special memoized version of our table body */}
-                    {table.getState().columnSizingInfo.isResizingColumn &&
-                    enableMemo ? (
-                        <MemoizedTableBody table={table} dataIds={dataId} />
+                    {isLoading ? (
+                        <div className="flex flex-col w-full h-full relative gap-2 py-1 ">
+                            <Loader />
+                        </div>
+                    ) : table.getState().columnSizingInfo.isResizingColumn &&
+                      enableMemo ? (
+                        <MemoizedTableBody
+                            table={table}
+                            dataIds={dataId}
+                            hideKeys={hideKeys}
+                        />
                     ) : (
-                        <TableBody table={table} dataIds={dataId} />
+                        <TableBody
+                            table={table}
+                            dataIds={dataId}
+                            hideKeys={hideKeys}
+                        />
                     )}
                 </div>
             </div>
@@ -212,10 +318,13 @@ export default function GenericTable({
 function TableBody({
     table,
     dataIds,
+    hideKeys,
 }: {
-    table: Table<Person>;
+    table: Table<any>;
     dataIds?: UniqueIdentifier[];
+    hideKeys: string[];
 }) {
+    // console.log(table.getAllColumns());
     return (
         <div
             {...{
@@ -223,33 +332,61 @@ function TableBody({
             }}
             className="h-full relative overflow-y-auto"
         >
-            {dataIds ? (
-                <SortableContext
-                    items={dataIds as UniqueIdentifier[]}
-                    strategy={verticalListSortingStrategy}
-                >
-                    {table.getRowModel().rows.map((row) => (
-                        <div
-                            {...{
-                                key: row.id,
-                                className: "tr",
-                            }}
+            {table.getRowModel() !== undefined ? (
+                table.getRowModel().rows &&
+                table.getRowModel().rows.length !== 0 ? (
+                    dataIds ? (
+                        <SortableContext
+                            items={dataIds as UniqueIdentifier[]}
+                            strategy={verticalListSortingStrategy}
                         >
-                            <DraggableRow key={row.id} row={row} />
-                        </div>
-                    ))}
-                </SortableContext>
-            ) : (
-                table.getRowModel().rows.map((row) => (
-                    <div
-                        {...{
-                            key: row.id,
-                            className: "tr",
-                        }}
-                    >
-                        <DraggableRow key={row.id} row={row} />
+                            {table.getRowModel().rows.map((row) => {
+                                // console.table(row);
+                                return (
+                                    <div
+                                        {...{
+                                            key: row.id,
+                                            className: "tr",
+                                        }}
+                                    >
+                                        <DraggableRow
+                                            key={row.id}
+                                            row={row}
+                                            hideKeys={hideKeys}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </SortableContext>
+                    ) : (
+                        table.getRowModel().rows.map((row) => (
+                            <div
+                                {...{
+                                    key: row.id,
+                                    className: "tr",
+                                }}
+                            >
+                                <DraggableRow
+                                    key={row.id}
+                                    row={row}
+                                    hideKeys={hideKeys}
+                                />
+                            </div>
+                        ))
+                    )
+                ) : (
+                    <div className="w-full h-full relative flex items-center justify-center">
+                        <h1 className="text-3xl font-semibold text-slate-500 text-wrap">
+                            Aucun Donnée Présent...
+                        </h1>
                     </div>
-                ))
+                )
+            ) : (
+                <div className="w-full h-full relative flex items-center justify-center">
+                    <h1 className="text-3xl font-semibold text-slate-500 text-wrap">
+                        Aucun Donnée Présent...
+                    </h1>
+                </div>
             )}
         </div>
     );

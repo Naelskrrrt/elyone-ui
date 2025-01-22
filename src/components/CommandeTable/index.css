@@ -29,8 +29,8 @@ td,
 
 th,
 .th {
-    padding-top: 8px;
-    padding-bottom: 8px;
+    /* padding-top: 8px;
+    padding-bottom: 8px; */
     position: relative;
     font-weight: bold;
     background: #ebf5fc;
@@ -39,7 +39,7 @@ th,
 
 td,
 .td {
-    height: 50px;
+    height: 70px;
     background: #fff;
 }
 
