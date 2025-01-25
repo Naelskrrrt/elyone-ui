@@ -64,7 +64,6 @@ const AddArticle = () => {
         "marque_commerciale",
         "objectif_qtes_vendues",
         "pourcentage_or",
-        "premiere_commercialisation",
         "AR_InterdireCommande",
         "AR_Exclure",
         "dossier_hs",
@@ -73,7 +72,7 @@ const AddArticle = () => {
         "remise_client",
         "prix_vente_client",
         "remise_categorie",
-        "prix_vente",
+        // "prix_vente",
         "remise_famille",
         // "remise_finale",
         // "prix_final",
@@ -173,8 +172,14 @@ const AddArticle = () => {
     };
 
     const handlePageClick = (selectedItem: { selected: number }) => {
-        setCurrentPage(selectedItem.selected);
+        if (isLoading) return;
+        const newPage = selectedItem.selected;
+        setCurrentPage(newPage); // Met à jour immédiatement l'état
     };
+
+    useEffect(() => {
+        refetch(); // Recharge les données à chaque changement de page
+    }, [currentPage]);
 
     const handleVisibleFilter = () => {
         console.log("Toggling visibility", showFilters);
@@ -194,6 +199,7 @@ const AddArticle = () => {
     useEffect(() => {
         setCurrentPage(0);
         setPaginationKey(Date.now());
+
         return () => {
             handleFilterChange.cancel();
         };
@@ -269,6 +275,18 @@ const AddArticle = () => {
                             {
                                 ...row.original,
                                 designation_article: data.designation,
+                                prix_final:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.prix_final ||
+                                    row.original.prix_final ||
+                                    "",
+                                remise_finale:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.remise_finale ||
+                                    row.original.remise_finale ||
+                                    "",
                             }
                         );
                     };
@@ -423,12 +441,7 @@ const AddArticle = () => {
                 header: "Pourcentage OR",
                 cell: (info) => info.getValue(),
             },
-            {
-                id: "premiere_commercialisation",
-                accessorKey: "premiere_commercialisation",
-                header: "Première Commercialisation",
-                cell: (info) => info.getValue(),
-            },
+
             {
                 id: "AR_InterdireCommande",
                 accessorKey: "AR_InterdireCommande",
@@ -480,11 +493,11 @@ const AddArticle = () => {
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
-                id: "prix_vente",
-                accessorKey: "prix_vente",
+                id: "prix_cat",
+                accessorKey: "prix_cat",
                 header: "Prix Catégorie",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                cell: ({ row }) =>
+                    parseFloat(row.original.prix_vente || "0").toFixed(2) +
                     " €",
             },
             {
@@ -515,6 +528,18 @@ const AddArticle = () => {
                             {
                                 ...row.original,
                                 remise_finale: data.remise,
+                                designation_article:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.designation_article ||
+                                    row.original.designation_article ||
+                                    "",
+                                prix_final:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.prix_final ||
+                                    row.original.prix_final ||
+                                    "",
                             }
                         );
                     };
@@ -584,6 +609,18 @@ const AddArticle = () => {
                             {
                                 ...row.original,
                                 prix_final: data.prixFinal,
+                                designation_article:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.designation_article ||
+                                    row.original.designation_article ||
+                                    "",
+                                remise_finale:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.remise_finale ||
+                                    row.original.remise_finale ||
+                                    "",
                             }
                         );
                     };
@@ -660,7 +697,15 @@ const AddArticle = () => {
                 },
             },
         ],
-        [checkedState, showFilters, filters, updateRowData, updatedRows]
+        [
+            checkedState,
+            showFilters,
+            filters,
+            updateRowData,
+            updatedRows,
+            paginationKey,
+            currentPage,
+        ]
     );
 
     return (
@@ -775,6 +820,7 @@ const AddArticle = () => {
                     </div>
                     {totalArticles && (
                         <ReactPaginate
+                            forcePage={currentPage}
                             key={paginationKey}
                             previousLabel={"←"}
                             nextLabel={"→"}

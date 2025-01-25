@@ -24,7 +24,7 @@ export interface Article {
     marque_commerciale?: string | null;
     objectif_qtes_vendues?: number | null;
     pourcentage_or?: number | null;
-    premiere_commercialisation?: string | null;
+    // premiere_commercialisation?: string | null;
     AR_Exclure?: number;
     AR_InterdireCommande?: number;
     dossier_hs?: string;
@@ -35,8 +35,8 @@ export interface Article {
     catalogue3_intitule?: string | null;
     catalogue4_intitule?: string | null;
     numero_document?: string | null;
-    date_achat?: string | null;
-    quantite_achat?: number | null;
+    // date_achat?: string | null;
+    // quantite_achat?: number | null;
     prix_achat?: string | null;
     prix_final?: string;
     remise_finale?: string;
