@@ -18,9 +18,9 @@ import { Article } from "@/types/Article";
 import { ColumnDef } from "@tanstack/react-table";
 import debounce from "lodash.debounce";
 import ReactPaginate from "react-paginate";
+import { Toaster, toast } from "sonner";
 
-import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu";
-
+import { sendPannier } from "@/api/articleApi";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -29,26 +29,74 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { useMutation } from "@tanstack/react-query";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import { AxiosError } from "axios";
+import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
+import { useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 
-type Checked = DropdownMenuCheckboxItemProps["checked"];
+// type Checked = DropdownMenuCheckboxItemProps["checked"];
 
 const AddArticle = () => {
     const [articlePerPage, setArticlePerPage] = useState(25);
     const [search] = useState<string>("");
     const [filters, setFilters] = useState<Record<string, string>>({});
-    const [checkedState, setCheckedState] = useState<Record<string, boolean>>(
-        {}
-    );
-    const [order, setOrder] = useState<Record<string, string>>({});
-    const [hideKeys, setHideKeys] = useState<string[]>([]); // Gérer dynamiquement les colonnes masquées
+    const [checkedState, setCheckedState] = useLocalStorage<
+        Record<string, boolean>
+    >("checkedRows", {});
+    // const [order, setOrder] = useState<Record<string, string>>({});
+    const [hideKeys, setHideKeys] = useState<string[]>([
+        "mise_en_sommeil",
+        "prix_ttc",
+        // "prix_vente",
+        "prix_achat1",
+        "dernier_prix_achat",
+        // "stock",
+        "Qtecommandeclient",
+        "QtecommandeAchat",
+        "AR_StockTerme",
+        "catalogue1_intitule",
+        "catalogue2_intitule",
+        "catalogue3_intitule",
+        "catalogue4_intitule",
+        "marque_commerciale",
+        "objectif_qtes_vendues",
+        "pourcentage_or",
+        "premiere_commercialisation",
+        "AR_InterdireCommande",
+        "AR_Exclure",
+        "dossier_hs",
+        "equivalent_75",
+        "ref_bis",
+        "remise_client",
+        "prix_vente_client",
+        "remise_categorie",
+        "prix_vente",
+        "remise_famille",
+        // "remise_finale",
+        // "prix_final",
+        // "prix_net",
+        // "actions",
+    ]); // Gérer dynamiquement les colonnes masquées
     const { params } = useUrlParams();
     const [showFilters, setShowFilters] = useState<Boolean>(false);
     const [currentPage, setCurrentPage] = useState(0);
+    const [paginationKey, setPaginationKey] = useState(Date.now());
+
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [updatedRows, setUpdatedRows] = useLocalStorage<
+        Record<string, Partial<Article>>
+    >("updatedRows", {});
+
     const {
         data: articles,
         isLoading,
         // isError,
         // error,
+        refetch,
     } = useArticles({
         ct_num: params?.ct_num || "EXAMPLE",
         filter: filters,
@@ -59,34 +107,69 @@ const AddArticle = () => {
         hubspot_id: params?.hubspot_id || "",
         deal_id: params?.deal_id || "",
     });
-    const totalArticles = articles?.total;
-    console.log("totalArticles:" + totalArticles);
 
-    const handleToggleColumnVisibility = () => {
+    const mutation = useMutation({
+        mutationFn: sendPannier,
+        onSuccess: () => {
+            toast.success("Les articles ont été ajoutés au panier");
+            setUpdatedRows({});
+            setCheckedState({});
+            queryClient.invalidateQueries({ queryKey: ["pannier"] });
+            queryClient.invalidateQueries({ queryKey: ["articles"] });
+            refetch();
+            navigate("/");
+        },
+        onError: (error: AxiosError) => {
+            if (error.status === 500)
+                toast.error("Erreur lors de l'envoi des données", {
+                    description: "Veuillez réessayer plus tard !",
+                });
+            else toast.error("Erreur lors de l'envoi des données");
+        },
+    });
+
+    const totalArticles = articles?.total;
+
+    const handleToggleColumnVisibility = (id: string) => {
         setFilters({});
         setHideKeys((prev) =>
-            prev.includes("designation_article")
-                ? prev.filter((key) => key !== "designation_article")
-                : [...prev, "designation_article"]
+            prev.includes(id) ? prev.filter((key) => key !== id) : [...prev, id]
         );
     };
 
-    const handleCheckboxChange = (userId: string) => {
+    const handleCheckboxChange = (articleId: string, row: Article) => {
         setCheckedState((prev) => ({
             ...prev,
-            [userId]: !prev[userId],
+            [articleId]: !prev[articleId],
         }));
+        if (!checkedState[articleId]) {
+            setUpdatedRows((prev) => ({
+                ...prev,
+                [articleId]: { ...row },
+            }));
+        } else {
+            setUpdatedRows((prev) => {
+                const { [articleId]: _, ...rest } = prev;
+                return rest;
+            });
+        }
     };
 
     const handleCancel = () => {
+        toast.warning("Vous avez annulé l'ajout des articles");
         setCheckedState({});
+        setUpdatedRows({});
     };
 
-    const handleAddArticle = () => {
-        const selectedArticles = Object.keys(checkedState).filter(
-            (key) => checkedState[key]
-        );
-        console.log("Articles sélectionnés :", selectedArticles);
+    console.log(params);
+
+    const handleSendArticle = () => {
+        const dataToSend = Object.entries(updatedRows).map(([_, value]) => ({
+            ...value,
+            uuid: params?.uuid,
+        })) as Article[];
+        console.log(dataToSend);
+        mutation.mutate(dataToSend);
     };
 
     const handlePageClick = (selectedItem: { selected: number }) => {
@@ -105,32 +188,42 @@ const AddArticle = () => {
                 [key]: value,
             }));
         }, 0),
-        [] // Dépendances vides pour s'assurer que debounce est stable
-    );
-
-    const handleOrderChange = React.useCallback(
-        debounce((key: string | number, value: string) => {
-            setOrder((prev) => ({
-                ...prev,
-                [key]: value,
-            }));
-        }, 0),
-        [] // Dépendances vides pour s'assurer que debounce est stable
+        []
     );
 
     useEffect(() => {
+        setCurrentPage(0);
+        setPaginationKey(Date.now());
         return () => {
             handleFilterChange.cancel();
         };
-    }, [handleFilterChange]);
+    }, [handleFilterChange, filters]);
+
+    const handleRefresh = () => {
+        refetch();
+        setFilters({});
+        setCurrentPage(0);
+        setArticlePerPage(25);
+        setPaginationKey(Date.now());
+    };
+
+    const updateRowData = (rowId: string, rowData: Partial<Article>) => {
+        setUpdatedRows((prev) => ({
+            ...prev,
+            [rowId]: {
+                ...rowData,
+            },
+        }));
+    };
+
+    console.log(updatedRows);
 
     const columns = React.useMemo<ColumnDef<Article>[]>(
-        // Designation, remise finale, prix finale = prix net
         () => [
             {
                 id: "checkbox",
                 cell: ({ row }) => (
-                    <input
+                    <Input
                         type="checkbox"
                         className="w-4 h-4"
                         checked={
@@ -140,7 +233,8 @@ const AddArticle = () => {
                         }
                         onChange={() =>
                             handleCheckboxChange(
-                                row.original.reference_article || ""
+                                row.original.reference_article || "",
+                                row.original
                             )
                         }
                     />
@@ -150,45 +244,84 @@ const AddArticle = () => {
                 enableHiding: false,
             },
             {
+                id: "reference_article",
                 accessorKey: "reference_article",
                 header: "Référence",
                 cell: (info) => info.getValue(),
             },
             {
+                id: "designation_article",
                 accessorKey: "designation_article",
                 header: "Désignation",
-                cell: ({ row }) => (
-                    <Input
-                        value={row.original.designation_article}
-                        className="mx-2"
-                    />
-                ),
-                size: 355,
+                cell: ({ row }) => {
+                    const defaultValue =
+                        updatedRows[row.original.reference_article as string]
+                            ?.designation_article ||
+                        row.original.designation_article ||
+                        "";
+
+                    const [design, setDesign] = useState<any>(defaultValue);
+
+                    const onSubmit = (data: any) => {
+                        toast.info("Désignation mise à jour");
+                        updateRowData(
+                            row.original.reference_article as string,
+                            {
+                                ...row.original,
+                                designation_article: data.designation,
+                            }
+                        );
+                    };
+
+                    const isChecked =
+                        checkedState[row.original.reference_article || ""];
+
+                    if (isChecked)
+                        return (
+                            <>
+                                <Input
+                                    value={design}
+                                    className="mx-2 w-full"
+                                    onChange={(e) => setDesign(e.target.value)}
+                                />
+
+                                {design == row.original.designation_article ||
+                                !updatedRows[
+                                    row.original.reference_article as string
+                                ]?.designation_article ? (
+                                    ""
+                                ) : (
+                                    <Button
+                                        disabled={!design}
+                                        type="submit"
+                                        onClick={() =>
+                                            onSubmit({ designation: design })
+                                        }
+                                    >
+                                        <Icon icon={"lucide:save"} />
+                                    </Button>
+                                )}
+                            </>
+                        );
+                    return <span>{row.original.designation_article}</span>;
+                },
+                size: 400,
             },
             {
+                id: "code_famille",
                 accessorKey: "code_famille",
                 header: "Code Famille",
-                cell: (info) => info.getValue(),
-            },
-            {
-                accessorKey: "categorie_article",
-                header: "Catégorie Article",
                 cell: (info) => info.getValue(),
                 size: 200,
             },
             {
-                accessorKey: "marque_commerciale",
-                header: "Marque Commerciale",
+                id: "mise_en_sommeil",
+                accessorKey: "mise_en_sommeil",
+                header: "Mise en Sommeil",
                 cell: (info) => info.getValue(),
             },
             {
-                accessorKey: "prix_vente",
-                header: "Prix Vente HT (€)",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-            {
+                id: "prix_ttc",
                 accessorKey: "prix_ttc",
                 header: "Prix TTC (€)",
                 cell: (info) =>
@@ -196,11 +329,24 @@ const AddArticle = () => {
                     " €",
             },
             {
-                accessorKey: "remise_client",
-                header: "Remise Client",
-                cell: (info) => info.getValue() || "Aucune",
+                id: "prix_vente",
+                accessorKey: "prix_vente",
+                header: "Prix Vente HT (€)",
+                cell: (info) =>
+                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                    " €",
+            },
+
+            {
+                id: "prix_achat1",
+                accessorKey: "prix_achat1",
+                header: "Prix Achat (€)",
+                cell: (info) =>
+                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                    " €",
             },
             {
+                id: "dernier_prix_achat",
                 accessorKey: "dernier_prix_achat",
                 header: "Dernier Prix Achat (€)",
                 cell: (info) =>
@@ -208,129 +354,314 @@ const AddArticle = () => {
                     " €",
             },
             {
-                accessorKey: "prix_achat1",
-                header: "Prix Achat 1 (€)",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-            {
-                accessorKey: "mise_en_sommeil",
-                header: "Mise en Sommeil",
-                cell: (info) => (info.getValue() ? "Oui" : "Non"),
-            },
-            {
+                id: "stock",
                 accessorKey: "stock",
-                header: "Stock",
+                header: " Qte Stock",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
             },
             {
+                id: "Qtecommandeclient",
                 accessorKey: "Qtecommandeclient",
                 header: "Qté Commandée Client",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
                 size: 200,
             },
             {
+                id: "QtecommandeAchat",
                 accessorKey: "QtecommandeAchat",
                 header: "Qté Commandée Achat",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
                 size: 200,
             },
             {
-                accessorKey: "prix_final",
-                header: "Prix Final (€)",
-                cell: ({ row }) => {
-                    const prixFinal = parseFloat(
-                        row.original.prix_final || "0"
-                    ).toFixed(2);
-                    return (
-                        <div className="mx-2">
-                            <Input
-                                value={prixFinal + " €"}
-                                onChange={() => {}}
-                            />
-                        </div>
-                    );
-                },
-            },
-            {
-                accessorKey: "remise_finale",
-                header: "Remise Finale (%)",
-                cell: ({ row }) => {
-                    const remiseFinale = parseFloat(
-                        row.original.remise_finale || "0"
-                    ).toFixed(2);
-                    return (
-                        <div className="mx-2">
-                            <Input
-                                value={remiseFinale + " %"}
-                                onChange={() => {}}
-                            />
-                        </div>
-                    );
-                },
-            },
-            {
-                accessorKey: "prix_net",
-                header: "Prix Net (€)",
+                id: "AR_StockTerme",
+                accessorKey: "AR_StockTerme",
+                header: "Stock à Terme",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-
-            {
-                accessorKey: "AR_Exclure",
-                header: "Exclu",
-                cell: (info) => (info.getValue() ? "Oui" : "Non"),
+                    parseFloat(info.getValue() as string).toFixed(2),
             },
             {
-                accessorKey: "AR_InterdireCommande",
-                header: "Commande Interdite",
-                cell: (info) => (info.getValue() ? "Oui" : "Non"),
-            },
-            {
-                accessorKey: "dossier_hs",
-                header: "Dossier HS",
-                cell: (info) => info.getValue(),
-            },
-            {
-                accessorKey: "premiere_commercialisation",
-                header: "Première Commercialisation",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-            {
-                accessorKey: "equivalent_75",
-                header: "Équivalent 75",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-            {
+                id: "catalogue1_intitule",
                 accessorKey: "catalogue1_intitule",
                 header: "Catalogue 1",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                id: "catalogue2_intitule",
                 accessorKey: "catalogue2_intitule",
                 header: "Catalogue 2",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                id: "catalogue3_intitule",
                 accessorKey: "catalogue3_intitule",
                 header: "Catalogue 3",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                id: "catalogue4_intitule",
                 accessorKey: "catalogue4_intitule",
                 header: "Catalogue 4",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
-        ],
-        [checkedState, showFilters, filters]
-    );
 
-    const [showStatusBar, setShowStatusBar] = React.useState<Checked>(true);
-    const [showActivityBar, setShowActivityBar] =
-        React.useState<Checked>(false);
-    const [showPanel, setShowPanel] = React.useState<Checked>(false);
+            {
+                id: "marque_commerciale",
+                accessorKey: "marque_commerciale",
+                header: "Marque Commerciale",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "objectif_qtes_vendues",
+                accessorKey: "objectif_qtes_vendues",
+                header: "Objectif/Qtés Vendues",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "pourcentage_or",
+                accessorKey: "pourcentage_or",
+                header: "Pourcentage OR",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "premiere_commercialisation",
+                accessorKey: "premiere_commercialisation",
+                header: "Première Commercialisation",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "AR_InterdireCommande",
+                accessorKey: "AR_InterdireCommande",
+                header: "Commande Interdite",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "AR_Exclure",
+                accessorKey: "AR_Exclure",
+                header: "Exclure",
+                cell: (info) => info.getValue(),
+            },
+
+            {
+                id: "dossier_hs",
+                accessorKey: "dossier_hs",
+                header: "Dossier HS",
+                cell: (info) => info.getValue(),
+            },
+
+            {
+                id: "equivalent_75",
+                accessorKey: "equivalent_75",
+                header: "Équivalent 75",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "ref_bis",
+                accessorKey: "ref_bis",
+                header: "Référence Bis",
+                cell: (info) => info.getValue(),
+            },
+            {
+                id: "remise_client",
+                accessorKey: "remise_client",
+                header: "Remise Client",
+                cell: (info) => info.getValue() || "Aucune",
+            },
+            {
+                id: "prix_vente_client",
+                accessorKey: "prix_vente_client",
+                header: "Prix Client",
+                cell: (info) => info.getValue() || "Aucune",
+            },
+            {
+                id: "remise_categorie",
+                accessorKey: "remise_categorie",
+                header: "Remise Catégorie",
+                cell: (info) => info.getValue() || "Aucune",
+            },
+            {
+                id: "prix_vente",
+                accessorKey: "prix_vente",
+                header: "Prix Catégorie",
+                cell: (info) =>
+                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                    " €",
+            },
+            {
+                id: "remise_famille",
+                accessorKey: "remise_famille",
+                header: "Remise Famille",
+                cell: (info) => info.getValue() || "Aucune",
+            },
+
+            {
+                id: "remise_finale",
+                accessorKey: "remise_finale",
+                header: "Remise Finale (%)",
+                cell: ({ row }) => {
+                    const defaultValue =
+                        updatedRows[row.original.reference_article as string]
+                            ?.remise_finale ||
+                        row.original.remise_finale ||
+                        "";
+                    const [remise, setRemise] = useState<any>(
+                        parseFloat(defaultValue as string).toFixed(2) || 0
+                    );
+
+                    const onSubmit = (data: any) => {
+                        toast.info("Remise Finale mise à jour");
+                        updateRowData(
+                            row.original.reference_article as string,
+                            {
+                                ...row.original,
+                                remise_finale: data.remise,
+                            }
+                        );
+                    };
+
+                    const isChecked =
+                        checkedState[row.original.reference_article || ""];
+
+                    if (isChecked)
+                        return (
+                            <>
+                                <Input
+                                    type="number"
+                                    // {...field}
+                                    value={remise}
+                                    onChange={(e) => {
+                                        setRemise(e.target.value);
+                                    }}
+                                    className="w-full text-left mr-2 "
+                                />
+
+                                {remise ==
+                                parseFloat(
+                                    row.original.remise_finale as string
+                                ).toFixed(2) ? (
+                                    ""
+                                ) : (
+                                    <Button
+                                        type="submit"
+                                        disabled={!remise}
+                                        onClick={() => onSubmit({ remise })}
+                                    >
+                                        <Icon icon={"lucide:save"} />
+                                    </Button>
+                                )}
+                            </>
+                        );
+                    return (
+                        <span>
+                            {parseFloat(
+                                row.original.remise_finale as string
+                            ).toFixed(2) || 0}
+                        </span>
+                    );
+                },
+                size: 250,
+            },
+
+            {
+                id: "prix_final",
+                accessorKey: "prix_final",
+                header: "Prix Final (€)",
+                cell: ({ row }) => {
+                    const defaultValue =
+                        updatedRows[row.original.reference_article as string]
+                            ?.prix_final ||
+                        row.original.prix_final ||
+                        "";
+                    const [prixFinal, setPrixFinal] = useState<any>(
+                        parseFloat(defaultValue as string).toFixed(2) || 0
+                    );
+
+                    const onSubmit = (data: any) => {
+                        toast.info("Prix Finale mise à jour");
+
+                        updateRowData(
+                            row.original.reference_article as string,
+                            {
+                                ...row.original,
+                                prix_final: data.prixFinal,
+                            }
+                        );
+                    };
+
+                    const isChecked =
+                        checkedState[row.original.reference_article || ""];
+
+                    if (isChecked)
+                        return (
+                            <>
+                                <Input
+                                    className="w-full text-left mr-2 "
+                                    value={prixFinal}
+                                    onChange={(e) =>
+                                        setPrixFinal(e.target.value)
+                                    }
+                                />
+
+                                {parseFloat(
+                                    row.original.prix_final as string
+                                ).toFixed(2) === prixFinal ? (
+                                    ""
+                                ) : (
+                                    <Button
+                                        type="submit"
+                                        disabled={!prixFinal}
+                                        onClick={() =>
+                                            onSubmit({ prixFinal: prixFinal })
+                                        }
+                                    >
+                                        <Icon icon={"lucide:save"} />
+                                    </Button>
+                                )}
+                            </>
+                        );
+                    return (
+                        <span>
+                            {parseFloat(
+                                row.original.prix_final as string
+                            ).toFixed(2) || 0}
+                        </span>
+                    );
+                },
+                size: 250,
+            },
+
+            {
+                id: "prix_net",
+                accessorKey: "prix_net",
+                header: "Prix Net (€)",
+                cell: ({ row }) => {
+                    return (
+                        parseFloat(
+                            (row.original.prix_net as string) || "0"
+                        ).toFixed(2) + " €"
+                    );
+                },
+
+                size: 200,
+            },
+
+            {
+                id: "actions",
+                accessorKey: "actions",
+                header: "Actions",
+                cell: ({ row }) => {
+                    return (
+                        <ArticleHistoryDialog
+                            designation={row.original.designation_article}
+                            reference={row.original.reference_article}
+                            key={row.original.reference_article}
+                        />
+                    );
+                },
+            },
+        ],
+        [checkedState, showFilters, filters, updateRowData, updatedRows]
+    );
 
     return (
         <div className="flex w-full relative h-full bg-slate-200 flex-col gap-1 overflow-y-auto px-3 py-1">
@@ -345,37 +676,57 @@ const AddArticle = () => {
                     >
                         Afficher les Filtres
                     </Button>
-                    <Button
-                        title="Colonne à afficher dans le tableau"
-                        onClick={handleToggleColumnVisibility}
-                    >
-                        Colonnes
-                    </Button>
-                    <DropdownMenu modal={false}>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">Open</Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 h-56 overflow-y-auto">
-                            <DropdownMenuLabel className="sticky -top-1 z-50 bg-white py-1">
-                                Afficher le colonne
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {columns.map((column) => {
-                                if (column.id === "checkbox") return null;
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        checked={showStatusBar}
-                                        onCheckedChange={setShowStatusBar}
-                                    >
-                                        {typeof column.header === "string"
-                                            ? column.header
-                                            : "Column"}
-                                    </DropdownMenuCheckboxItem>
-                                );
-                            })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+
+                    <div className="flex items-center gap-4">
+                        <Button
+                            size={"icon"}
+                            variant={"outline"}
+                            onClick={handleRefresh}
+                        >
+                            <Icon icon={"solar:refresh-linear"} />
+                        </Button>
+                        <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                                <Button> Colonnes à afficher</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-60 h-96 overflow-y-auto">
+                                <DropdownMenuLabel className="sticky -top-1 z-50 bg-white py-1">
+                                    Colonnes à afficher
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                {columns.map((col) => {
+                                    if (
+                                        (articles?.empty_columns &&
+                                            Object.keys(
+                                                articles.empty_columns
+                                            ).includes(col.id as string)) ||
+                                        col.id == "checkbox" ||
+                                        col.id == "actions"
+                                    )
+                                        return null;
+                                    return (
+                                        <DropdownMenuCheckboxItem
+                                            key={col.id}
+                                            checked={
+                                                !hideKeys.includes(
+                                                    col.id as string
+                                                )
+                                            }
+                                            onCheckedChange={() =>
+                                                handleToggleColumnVisibility(
+                                                    col.id as string
+                                                )
+                                            }
+                                        >
+                                            {typeof col.header === "string"
+                                                ? col.header
+                                                : col.id}
+                                        </DropdownMenuCheckboxItem>
+                                    );
+                                })}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
 
                 <GenericTable
@@ -422,30 +773,33 @@ const AddArticle = () => {
                         </Select>
                         <p className="text-slate-800 text-sm">Par page</p>
                     </div>
-                    <ReactPaginate
-                        previousLabel={"←"}
-                        nextLabel={"→"}
-                        breakLabel={"..."}
-                        pageCount={
-                            totalArticles
-                                ? Math.ceil(totalArticles / articlePerPage)
-                                : 0
-                        }
-                        marginPagesDisplayed={2}
-                        pageRangeDisplayed={1}
-                        onPageChange={handlePageClick}
-                        containerClassName="flex justify-center gap-2 "
-                        pageClassName="group"
-                        pageLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
-                        previousClassName="group"
-                        previousLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
-                        nextClassName="group"
-                        nextLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
-                        breakClassName="group"
-                        breakLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
-                        activeClassName="active"
-                        activeLinkClassName="bg-blue-500 text-white"
-                    />
+                    {totalArticles && (
+                        <ReactPaginate
+                            key={paginationKey}
+                            previousLabel={"←"}
+                            nextLabel={"→"}
+                            breakLabel={"..."}
+                            pageCount={
+                                totalArticles
+                                    ? Math.ceil(totalArticles / articlePerPage)
+                                    : 0
+                            }
+                            marginPagesDisplayed={2}
+                            pageRangeDisplayed={1}
+                            onPageChange={handlePageClick}
+                            containerClassName="flex justify-center gap-2 "
+                            pageClassName="group"
+                            pageLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
+                            previousClassName="group"
+                            previousLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
+                            nextClassName="group"
+                            nextLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
+                            breakClassName="group"
+                            breakLinkClassName="px-3 py-1 rounded-md border border-slate-300 text-slate-600 hover:bg-blue-500 hover:text-white transition-all"
+                            activeClassName="active"
+                            activeLinkClassName="bg-blue-500 text-white"
+                        />
+                    )}
                 </div>
                 {Object.values(checkedState).some((isChecked) => isChecked) && (
                     <div className="flex gap-2 flex-row">
@@ -455,10 +809,11 @@ const AddArticle = () => {
                         >
                             Annuler
                         </Button>
-                        <Button onClick={handleAddArticle}>Ajouter</Button>
+                        <Button onClick={handleSendArticle}>Ajouter</Button>
                     </div>
                 )}
             </div>
+            <Toaster position="top-right" richColors />
         </div>
     );
 };

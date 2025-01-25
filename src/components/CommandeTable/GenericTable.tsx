@@ -33,7 +33,6 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Loader from "../loader/loader";
 import { Input } from "../ui/input";
-import { Article } from "@/types/Article";
 
 export type Person = {
     userId: string;
@@ -44,24 +43,22 @@ export type Person = {
     status: string;
     progress: number;
 };
-
 const DraggableRow = ({
     row,
     hideKeys,
 }: {
-    row: Row<Person>;
-    hideKeys: string[];
+    row: Row<any>;
+    hideKeys?: string[];
 }) => {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
-        id: row.original.userId,
+        id: row.original.id as UniqueIdentifier, // Utilisez une clé unique ici
     });
 
     const style: CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition: transition,
-        opacity: isDragging ? 0.8 : 1,
+        // opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 1 : 0,
-        position: "relative",
         display: "flex",
     };
 
@@ -69,7 +66,7 @@ const DraggableRow = ({
         <tr ref={setNodeRef} style={style}>
             {row
                 .getVisibleCells()
-                .filter((cell) => !hideKeys.includes(cell.column.id)) // Exclure les colonnes masquées
+                .filter((cell) => !hideKeys?.includes(cell.column.id)) // Exclure les colonnes masquées
                 .map((cell) => (
                     <td key={cell.id} style={{ width: cell.column.getSize() }}>
                         {flexRender(
@@ -96,19 +93,17 @@ export default function GenericTable({
 // setColumnVisibility,
 {
     columns: ColumnDef<any>[];
-    data: any;
+    data?: any;
     dataId?: UniqueIdentifier[];
-    handleDragEnd: (event: DragEndEvent) => void;
-    isLoading: boolean;
+    handleDragEnd?: (event: DragEndEvent) => void;
+    isLoading?: boolean;
     handleFilterChange: (key: string, value: string) => void;
-    filters: Record<string, string>;
+    filters?: Record<string, string>;
     showFilters?: boolean;
-    hideKeys: string[];
+    hideKeys?: string[];
     // columnVisibility: any;
     // setColumnVisibility: any;
 }) {
-    const rerender = React.useReducer(() => ({}), {})[1];
-
     const table = useReactTable({
         data,
         columns,
@@ -120,7 +115,7 @@ export default function GenericTable({
         // onColumnVisibilityChange: setColumnVisibility,
         columnResizeMode: "onChange",
         getCoreRowModel: getCoreRowModel(),
-        getRowId: (row) => row.userId, //required because row indexes will change
+        getRowId: (row) => row.id || row.id,
     });
 
     // reorder rows after drag & drop
@@ -136,11 +131,13 @@ export default function GenericTable({
         const colSizes: { [key: string]: number } = {};
         for (let i = 0; i < headers.length; i++) {
             const header = headers[i]!;
-            console.log(header);
-            if (hideKeys.includes(header.column.id)) {
+            // console.log(header);
+            if (hideKeys?.includes(header.column.id)) {
                 colSizes[`--header-${header.id}-size`] = 0;
                 colSizes[`--col-${header.column.id}-size`] = 0;
             }
+
+            // console.log(header.getSize());
 
             colSizes[`--header-${header.id}-size`] = header.getSize();
             colSizes[`--col-${header.column.id}-size`] =
@@ -150,7 +147,7 @@ export default function GenericTable({
     }, [table.getState().columnSizingInfo, table.getState().columnSizing]);
 
     //demo purposes
-    const [enableMemo, setEnableMemo] = React.useState(true);
+    const [enableMemo] = React.useState(true);
 
     return (
         <DndContext
@@ -160,17 +157,25 @@ export default function GenericTable({
             sensors={sensors}
         >
             {/* <div className="h-4" />({data.length} rows) */}
-            <div className="flex flex-col w-full h-full gap-2 overflow-x-auto py-1 ">
+            <div className="flex flex-col w-full relative h-full gap-2 overflow-x-auto py-1 ">
                 <div
                     {...{
                         className: "divTable",
                         style: {
                             ...columnSizeVars,
-                            width: table.getTotalSize(),
+                            width: table
+                                .getFlatHeaders()
+                                .filter(
+                                    (header) => !hideKeys?.includes(header.id)
+                                )
+                                .reduce(
+                                    (total, header) => total + header.getSize(),
+                                    0
+                                ),
                         },
                     }}
                 >
-                    <div className="thead  ">
+                    <div className="thead">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <div
                                 {...{
@@ -179,8 +184,8 @@ export default function GenericTable({
                                 }}
                             >
                                 {headerGroup.headers.map((header) => {
-                                    console.log(hideKeys);
-                                    if (hideKeys.includes(header.id)) {
+                                    // console.log(hideKeys);
+                                    if (hideKeys?.includes(header.id)) {
                                         // return null; // Ignore cette colonne
                                         return null;
                                     }
@@ -239,7 +244,10 @@ export default function GenericTable({
                                 {headerGroup.headers.map((header, i) => {
                                     // Vérifie si l'id du header est dans le tableau des ids à exclure
 
-                                    if (hideKeys.includes(header.id)) {
+                                    if (
+                                        hideKeys?.includes(header.id) ||
+                                        header.id == "actions"
+                                    ) {
                                         // return null; // Ignore cette colonne
                                         return null;
                                     }
@@ -268,7 +276,11 @@ export default function GenericTable({
                                                                 .header + "..."
                                                         }
                                                         value={
-                                                            filters[i - 1] || ""
+                                                            filters
+                                                                ? filters[
+                                                                      i - 1
+                                                                  ] || ""
+                                                                : ""
                                                         }
                                                         onChange={(e) => {
                                                             handleFilterChange(
@@ -322,21 +334,22 @@ function TableBody({
 }: {
     table: Table<any>;
     dataIds?: UniqueIdentifier[];
-    hideKeys: string[];
+    hideKeys?: string[];
 }) {
     // console.log(table.getAllColumns());
     return (
         <div
             {...{
-                className: "tbody ",
+                className: "tbody",
             }}
-            className="h-full relative overflow-y-auto"
+            className="max-h-[calc(100%-50px)] relative overflow-y-auto overflow-x-hidden w-full pb-14 mr-3"
         >
             {table.getRowModel() !== undefined ? (
                 table.getRowModel().rows &&
                 table.getRowModel().rows.length !== 0 ? (
                     dataIds ? (
                         <SortableContext
+                            key={dataIds.join("-")}
                             items={dataIds as UniqueIdentifier[]}
                             strategy={verticalListSortingStrategy}
                         >
@@ -375,16 +388,16 @@ function TableBody({
                         ))
                     )
                 ) : (
-                    <div className="w-full h-full relative flex items-center justify-center">
-                        <h1 className="text-3xl font-semibold text-slate-500 text-wrap">
-                            Aucun Donnée Présent...
+                    <div className="w-full h-full relative py-16 flex items-center justify-center">
+                        <h1 className="text-2xl font-semibold text-slate-500 text-wrap">
+                            Aucun Donnée
                         </h1>
                     </div>
                 )
             ) : (
-                <div className="w-full h-full relative flex items-center justify-center">
-                    <h1 className="text-3xl font-semibold text-slate-500 text-wrap">
-                        Aucun Donnée Présent...
+                <div className="w-full h-full relative flex py-16 items-center justify-center">
+                    <h1 className="text-2xl font-medium text-slate-500 text-wrap">
+                        Aucun Donnée
                     </h1>
                 </div>
             )}
