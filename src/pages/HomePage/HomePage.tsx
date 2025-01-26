@@ -564,6 +564,7 @@ const HomePage = () => {
                     </div>
 
                     <GenericTable
+                        handleSort={() => {}}
                         columns={columns}
                         data={commandeState || []}
                         handleDragEnd={handleDragEnd}
