@@ -34,15 +34,6 @@ import { CSS } from "@dnd-kit/utilities";
 import Loader from "../loader/loader";
 import { Input } from "../ui/input";
 
-export type Person = {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    age: number;
-    visits: number;
-    status: string;
-    progress: number;
-};
 const DraggableRow = ({
     row,
     hideKeys,
@@ -89,6 +80,9 @@ export default function GenericTable({
     filters,
     showFilters,
     hideKeys,
+    handleSort,
+    sortState,
+    isSortable,
 }: // columnVisibility,
 // setColumnVisibility,
 {
@@ -101,6 +95,9 @@ export default function GenericTable({
     filters?: Record<string, string>;
     showFilters?: boolean;
     hideKeys?: string[];
+    handleSort: (columnId: string) => void;
+    sortState?: { index?: number | string; value: "ASC" | "DESC" };
+    isSortable?: boolean;
     // columnVisibility: any;
     // setColumnVisibility: any;
 }) {
@@ -183,25 +180,45 @@ export default function GenericTable({
                                     className: "tr",
                                 }}
                             >
-                                {headerGroup.headers.map((header) => {
-                                    // console.log(hideKeys);
+                                {headerGroup.headers.map((header, i) => {
                                     if (hideKeys?.includes(header.id)) {
-                                        // return null; // Ignore cette colonne
                                         return null;
                                     }
+
                                     return (
                                         <div
-                                            {...{
-                                                key: header.id,
-                                                className: "th",
-                                                style: {
-                                                    width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                                                },
+                                            key={header.id}
+                                            className="th"
+                                            style={{
+                                                width: `calc(var(--header-${header.id}-size) * 1px)`,
                                             }}
-                                            // className="bg-sky-50"
                                         >
                                             <div className="flex flex-col gap-1 items-start pr-2">
-                                                <h1>
+                                                <h1
+                                                    className={
+                                                        isSortable
+                                                            ? "cursor-pointer"
+                                                            : ""
+                                                    }
+                                                    onClick={() => {
+                                                        if (
+                                                            header.id ===
+                                                                "checkbox" ||
+                                                            header.id ===
+                                                                "actions"
+                                                        ) {
+                                                            return;
+                                                        }
+
+                                                        if (isSortable) {
+                                                            handleSort(
+                                                                (
+                                                                    i - 1
+                                                                ).toString()
+                                                            );
+                                                        }
+                                                    }}
+                                                >
                                                     {header.isPlaceholder
                                                         ? null
                                                         : flexRender(
@@ -210,22 +227,30 @@ export default function GenericTable({
                                                                   .header,
                                                               header.getContext()
                                                           )}
+
+                                                    {/* Afficher l'icône du tri */}
+                                                    {sortState?.index ==
+                                                        i - 1 && (
+                                                        <span>
+                                                            {sortState.value ===
+                                                            "ASC"
+                                                                ? " 🔼"
+                                                                : " 🔽"}
+                                                        </span>
+                                                    )}
                                                 </h1>
                                             </div>
                                             <div
-                                                {...{
-                                                    onDoubleClick: () =>
-                                                        header.column.resetSize(),
-                                                    onMouseDown:
-                                                        header.getResizeHandler(),
-                                                    onTouchStart:
-                                                        header.getResizeHandler(),
-                                                    className: `resizer ${
-                                                        header.column.getIsResizing()
-                                                            ? "isResizing"
-                                                            : ""
-                                                    }`,
-                                                }}
+                                                onDoubleClick={() =>
+                                                    header.column.resetSize()
+                                                }
+                                                onMouseDown={header.getResizeHandler()}
+                                                onTouchStart={header.getResizeHandler()}
+                                                className={`resizer ${
+                                                    header.column.getIsResizing()
+                                                        ? "isResizing"
+                                                        : ""
+                                                }`}
                                             />
                                         </div>
                                     );

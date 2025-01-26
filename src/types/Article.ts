@@ -107,7 +107,7 @@ export type FetchArticlesParams = {
     search?: string;
     page?: number;
     per_page?: number;
-    sqlOrder?: { [key: string]: "ASC" | "DESC" };
+    sqlOrder?: { index?: number | string; value: "ASC" | "DESC" };
 };
 
 export interface FetchArticlesResponse {

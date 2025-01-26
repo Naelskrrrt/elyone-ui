@@ -64,6 +64,7 @@ const AddArticle = () => {
         "marque_commerciale",
         "objectif_qtes_vendues",
         "pourcentage_or",
+        "premiere_commercialisation",
         "AR_InterdireCommande",
         "AR_Exclure",
         "dossier_hs",
@@ -83,6 +84,26 @@ const AddArticle = () => {
     const [showFilters, setShowFilters] = useState<Boolean>(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [paginationKey, setPaginationKey] = useState(Date.now());
+    const [sortState, setSortState] = useState<{
+        index: string;
+        value: "ASC" | "DESC";
+    }>({
+        index: "0",
+        value: "DESC",
+    });
+    //sqlOrder={"index":"index de colonnes", "value" : "DESC na ASC"}
+
+    const handleSort = (columnId: string) => {
+        setSortState((prev) => {
+            if (prev.index === columnId) {
+                return {
+                    index: columnId,
+                    value: prev.value === "ASC" ? "DESC" : "ASC",
+                };
+            }
+            return { index: columnId, value: "ASC" };
+        });
+    };
 
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -102,7 +123,7 @@ const AddArticle = () => {
         search: search,
         page: currentPage + 1, // La pagination dans React Query est souvent 1-indexée
         per_page: articlePerPage,
-        sqlOrder: { "0": "ASC" },
+        sqlOrder: sortState,
         hubspot_id: params?.hubspot_id || "",
         deal_id: params?.deal_id || "",
     });
@@ -203,10 +224,10 @@ const AddArticle = () => {
         return () => {
             handleFilterChange.cancel();
         };
-    }, [handleFilterChange, filters]);
+    }, [handleFilterChange, filters, sortState]);
 
     const handleRefresh = () => {
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["articles"] });
         setFilters({});
         setCurrentPage(0);
         setArticlePerPage(25);
@@ -250,12 +271,14 @@ const AddArticle = () => {
                 enableHiding: false,
             },
             {
+                // 0
                 id: "reference_article",
                 accessorKey: "reference_article",
                 header: "Référence",
                 cell: (info) => info.getValue(),
             },
             {
+                // 1
                 id: "designation_article",
                 accessorKey: "designation_article",
                 header: "Désignation",
@@ -323,39 +346,45 @@ const AddArticle = () => {
                         );
                     return <span>{row.original.designation_article}</span>;
                 },
-                size: 400,
+                size: 350,
             },
             {
+                // 2
                 id: "code_famille",
                 accessorKey: "code_famille",
                 header: "Code Famille",
                 cell: (info) => info.getValue(),
-                size: 200,
+                size: 150,
             },
             {
+                // 3
                 id: "mise_en_sommeil",
                 accessorKey: "mise_en_sommeil",
                 header: "Mise en Sommeil",
                 cell: (info) => info.getValue(),
             },
             {
+                // 4
                 id: "prix_ttc",
                 accessorKey: "prix_ttc",
-                header: "Prix TTC (€)",
+                header: "Prix TTC",
                 cell: (info) =>
                     parseFloat(info.getValue<string>() || "0").toFixed(2) +
                     " €",
             },
             {
+                // 5
                 id: "prix_vente",
                 accessorKey: "prix_vente",
-                header: "Prix Vente HT (€)",
+                header: "Prix Vente HT",
                 cell: (info) =>
                     parseFloat(info.getValue<string>() || "0").toFixed(2) +
                     " €",
+                size: 160,
             },
 
             {
+                // 6
                 id: "prix_achat1",
                 accessorKey: "prix_achat1",
                 header: "Prix Achat (€)",
@@ -364,6 +393,8 @@ const AddArticle = () => {
                     " €",
             },
             {
+                // 7
+                // PRIX UNITAIRE D'ACHAT
                 id: "dernier_prix_achat",
                 accessorKey: "dernier_prix_achat",
                 header: "Dernier Prix Achat (€)",
@@ -372,12 +403,14 @@ const AddArticle = () => {
                     " €",
             },
             {
+                // 8
                 id: "stock",
                 accessorKey: "stock",
                 header: " Qte Stock",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
             },
             {
+                // 9
                 id: "Qtecommandeclient",
                 accessorKey: "Qtecommandeclient",
                 header: "Qté Commandée Client",
@@ -385,6 +418,7 @@ const AddArticle = () => {
                 size: 200,
             },
             {
+                // 10
                 id: "QtecommandeAchat",
                 accessorKey: "QtecommandeAchat",
                 header: "Qté Commandée Achat",
@@ -392,6 +426,7 @@ const AddArticle = () => {
                 size: 200,
             },
             {
+                // 11 stock à terme
                 id: "AR_StockTerme",
                 accessorKey: "AR_StockTerme",
                 header: "Stock à Terme",
@@ -399,24 +434,28 @@ const AddArticle = () => {
                     parseFloat(info.getValue() as string).toFixed(2),
             },
             {
+                // 12
                 id: "catalogue1_intitule",
                 accessorKey: "catalogue1_intitule",
                 header: "Catalogue 1",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                // 13
                 id: "catalogue2_intitule",
                 accessorKey: "catalogue2_intitule",
                 header: "Catalogue 2",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                // 14
                 id: "catalogue3_intitule",
                 accessorKey: "catalogue3_intitule",
                 header: "Catalogue 3",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
+                // 15
                 id: "catalogue4_intitule",
                 accessorKey: "catalogue4_intitule",
                 header: "Catalogue 4",
@@ -424,18 +463,21 @@ const AddArticle = () => {
             },
 
             {
+                // 16
                 id: "marque_commerciale",
                 accessorKey: "marque_commerciale",
                 header: "Marque Commerciale",
                 cell: (info) => info.getValue(),
             },
             {
+                // 17
                 id: "objectif_qtes_vendues",
                 accessorKey: "objectif_qtes_vendues",
                 header: "Objectif/Qtés Vendues",
                 cell: (info) => info.getValue(),
             },
             {
+                // 18
                 id: "pourcentage_or",
                 accessorKey: "pourcentage_or",
                 header: "Pourcentage OR",
@@ -443,12 +485,21 @@ const AddArticle = () => {
             },
 
             {
+                // 19
+                id: "premiere_commercialisation",
+                accessorKey: "premiere_commercialisation",
+                header: "1ère Comm",
+                cell: (info) => info.getValue(),
+            },
+            {
+                // 20
                 id: "AR_InterdireCommande",
                 accessorKey: "AR_InterdireCommande",
                 header: "Commande Interdite",
                 cell: (info) => info.getValue(),
             },
             {
+                // 21
                 id: "AR_Exclure",
                 accessorKey: "AR_Exclure",
                 header: "Exclure",
@@ -456,6 +507,7 @@ const AddArticle = () => {
             },
 
             {
+                // 22
                 id: "dossier_hs",
                 accessorKey: "dossier_hs",
                 header: "Dossier HS",
@@ -463,44 +515,52 @@ const AddArticle = () => {
             },
 
             {
+                // 23
                 id: "equivalent_75",
                 accessorKey: "equivalent_75",
                 header: "Équivalent 75",
                 cell: (info) => info.getValue(),
             },
             {
+                // 24
                 id: "ref_bis",
                 accessorKey: "ref_bis",
                 header: "Référence Bis",
                 cell: (info) => info.getValue(),
             },
             {
+                // 25
                 id: "remise_client",
                 accessorKey: "remise_client",
                 header: "Remise Client",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
+                // 26
                 id: "prix_vente_client",
                 accessorKey: "prix_vente_client",
                 header: "Prix Client",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
+                // 27
                 id: "remise_categorie",
                 accessorKey: "remise_categorie",
                 header: "Remise Catégorie",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
+                // 28
                 id: "prix_cat",
                 accessorKey: "prix_cat",
                 header: "Prix Catégorie",
                 cell: ({ row }) =>
                     parseFloat(row.original.prix_vente || "0").toFixed(2) +
                     " €",
+                size: 170,
             },
             {
+                // 29
                 id: "remise_famille",
                 accessorKey: "remise_famille",
                 header: "Remise Famille",
@@ -508,6 +568,7 @@ const AddArticle = () => {
             },
 
             {
+                // 30
                 id: "remise_finale",
                 accessorKey: "remise_finale",
                 header: "Remise Finale (%)",
@@ -584,10 +645,11 @@ const AddArticle = () => {
                         </span>
                     );
                 },
-                size: 250,
+                size: 200,
             },
 
             {
+                // 31
                 id: "prix_final",
                 accessorKey: "prix_final",
                 header: "Prix Final (€)",
@@ -664,10 +726,11 @@ const AddArticle = () => {
                         </span>
                     );
                 },
-                size: 250,
+                size: 200,
             },
 
             {
+                // 32
                 id: "prix_net",
                 accessorKey: "prix_net",
                 header: "Prix Net (€)",
@@ -679,7 +742,7 @@ const AddArticle = () => {
                     );
                 },
 
-                size: 200,
+                size: 150,
             },
 
             {
@@ -695,6 +758,7 @@ const AddArticle = () => {
                         />
                     );
                 },
+                size: 125,
             },
         ],
         [
@@ -705,8 +769,13 @@ const AddArticle = () => {
             updatedRows,
             paginationKey,
             currentPage,
+            sortState,
+            setSortState,
+            handleSort,
         ]
     );
+
+    console.log(articles?.empty_columns);
 
     return (
         <div className="flex w-full relative h-full bg-slate-200 flex-col gap-1 overflow-y-auto px-3 py-1">
@@ -788,6 +857,9 @@ const AddArticle = () => {
                             ? Object.keys(articles.empty_columns)
                             : []),
                     ]}
+                    handleSort={handleSort}
+                    sortState={sortState}
+                    isSortable={true}
                 />
 
                 <div className="flex items-center  justify-between flex-wrap">

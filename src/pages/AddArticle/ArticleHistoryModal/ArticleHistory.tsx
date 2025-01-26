@@ -114,6 +114,8 @@ export function ArticleHistoryDialog({
                     handleFilterChange={() => {}}
                     columns={columns}
                     data={articleHistory?.data}
+                    handleSort={() => {}}
+                    isSortable={false}
                 />
                 {/* </div> */}
                 <DrawerFooter className="pt-2"></DrawerFooter>
