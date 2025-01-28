@@ -1,5 +1,6 @@
 // types/Article.ts
 export interface Article {
+    id?: number;
     reference_article?: string; //
     designation_article?: string; //
     code_famille?: string; //
@@ -42,6 +43,8 @@ export interface Article {
     remise_finale?: string;
     prix_net?: string;
     AR_StockTerme?: string | null;
+    quantite?: string;
+    total_ht_net?: string;
 }
 
 export interface Commandes {
@@ -89,6 +92,8 @@ export interface Commandes {
     prix_net?: string;
     AR_StockTerme?: string | null;
     uuid?: string;
+    quantite?: string;
+    total_ht_net?: string;
 }
 
 export type ArticleHistory = {
@@ -116,6 +121,12 @@ export interface FetchArticlesResponse {
     empty_columns: { [key: string]: string };
 }
 
+export interface FetchArticlesGlobalHistoryResponse {
+    data: GlobalHistory[];
+    total: number;
+    empty_columns: { [key: string]: string };
+}
+
 export interface FetchCommandesResponse {
     articles: Commandes[];
     total: number;
@@ -125,4 +136,16 @@ export interface FetchCommandesResponse {
 export interface FetchArticlesHistoryResponse {
     error: boolean;
     data?: ArticleHistory[];
+}
+
+export interface GlobalHistory {
+    date_achat: string;
+    numero_document: string;
+    reference_article: string;
+    designation_article: string;
+    quantite_achat: string;
+    prix_achat: string;
+    remise: string;
+    prix_remise: string;
+    total_ht_net: string;
 }

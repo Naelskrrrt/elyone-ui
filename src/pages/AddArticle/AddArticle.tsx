@@ -34,7 +34,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { AxiosError } from "axios";
 import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
 // type Checked = DropdownMenuCheckboxItemProps["checked"];
@@ -89,9 +89,8 @@ const AddArticle = () => {
         value: "ASC" | "DESC";
     }>({
         index: "0",
-        value: "DESC",
+        value: "ASC",
     });
-    //sqlOrder={"index":"index de colonnes", "value" : "DESC na ASC"}
 
     const handleSort = (columnId: string) => {
         setSortState((prev) => {
@@ -243,7 +242,7 @@ const AddArticle = () => {
         }));
     };
 
-    console.log(updatedRows);
+    console.log("ROW on localstorage:", updatedRows);
 
     const columns = React.useMemo<ColumnDef<Article>[]>(
         () => [
@@ -310,6 +309,7 @@ const AddArticle = () => {
                                     ]?.remise_finale ||
                                     row.original.remise_finale ||
                                     "",
+                                prix_net: data.prix_net,
                             }
                         );
                     };
@@ -317,14 +317,33 @@ const AddArticle = () => {
                     const isChecked =
                         checkedState[row.original.reference_article || ""];
 
+                    const submitCondition =
+                        design == row.original.designation_article ||
+                        !updatedRows[row.original.reference_article as string]
+                            ?.designation_article;
+
                     if (isChecked)
                         return (
-                            <>
-                                <Input
-                                    value={design}
-                                    className="mx-2 w-full"
-                                    onChange={(e) => setDesign(e.target.value)}
-                                />
+                            <div className="flex gap-4 w-full mr-2">
+                                <div className="flex flex-col gap-1 w-full ">
+                                    <Input
+                                        value={design}
+                                        className="mx-2 w-full"
+                                        onChange={(e) =>
+                                            setDesign(e.target.value)
+                                        }
+                                    />
+
+                                    <p
+                                        className={
+                                            submitCondition
+                                                ? "hidden"
+                                                : "text-[9px] text-nextblue-500"
+                                        }
+                                    >
+                                        Enregistrer avant de continuer.
+                                    </p>
+                                </div>
 
                                 {design == row.original.designation_article ||
                                 !updatedRows[
@@ -342,7 +361,7 @@ const AddArticle = () => {
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </>
+                            </div>
                         );
                     return <span>{row.original.designation_article}</span>;
                 },
@@ -581,6 +600,12 @@ const AddArticle = () => {
                     const [remise, setRemise] = useState<any>(
                         parseFloat(defaultValue as string).toFixed(2) || 0
                     );
+                    const prixFinal = parseFloat(
+                        updatedRows[row.original.reference_article as string]
+                            ?.prix_final ||
+                            row.original.prix_final ||
+                            ""
+                    );
 
                     const onSubmit = (data: any) => {
                         toast.info("Remise Finale mise à jour");
@@ -601,6 +626,13 @@ const AddArticle = () => {
                                     ]?.prix_final ||
                                     row.original.prix_final ||
                                     "",
+                                prix_net: (
+                                    prixFinal -
+                                    (prixFinal * parseFloat(data.remise)) / 100
+                                )
+                                    .toFixed(2)
+                                    .toString(),
+                                // Prix Net = Prix Final – (Prix Final * Remise Final/100)
                             }
                         );
                     };
@@ -608,18 +640,35 @@ const AddArticle = () => {
                     const isChecked =
                         checkedState[row.original.reference_article || ""];
 
+                    const submitCondition =
+                        remise ==
+                        parseFloat(
+                            row.original.remise_finale as string
+                        ).toFixed(2);
+
                     if (isChecked)
                         return (
-                            <>
-                                <Input
-                                    type="number"
-                                    // {...field}
-                                    value={remise}
-                                    onChange={(e) => {
-                                        setRemise(e.target.value);
-                                    }}
-                                    className="w-full text-left mr-2 "
-                                />
+                            <div className="flex gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <Input
+                                        type="number"
+                                        // {...field}
+                                        value={remise}
+                                        onChange={(e) => {
+                                            setRemise(e.target.value);
+                                        }}
+                                        className="w-full text-left mr-2 "
+                                    />
+                                    <p
+                                        className={
+                                            submitCondition
+                                                ? "hidden"
+                                                : "text-[9px] text-nextblue-500"
+                                        }
+                                    >
+                                        Enregistrer avant de continuer.
+                                    </p>
+                                </div>
 
                                 {remise ==
                                 parseFloat(
@@ -635,7 +684,7 @@ const AddArticle = () => {
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </>
+                            </div>
                         );
                     return (
                         <span>
@@ -663,6 +712,13 @@ const AddArticle = () => {
                         parseFloat(defaultValue as string).toFixed(2) || 0
                     );
 
+                    const remiseFinale = parseFloat(
+                        updatedRows[row.original.reference_article as string]
+                            ?.prix_final ||
+                            row.original.prix_final ||
+                            ""
+                    );
+
                     const onSubmit = (data: any) => {
                         toast.info("Prix Finale mise à jour");
 
@@ -683,6 +739,12 @@ const AddArticle = () => {
                                     ]?.remise_finale ||
                                     row.original.remise_finale ||
                                     "",
+                                prix_net: (
+                                    data.prixFinal -
+                                    (data.prixFinal * remiseFinale) / 100
+                                )
+                                    .toFixed(2)
+                                    .toString(),
                             }
                         );
                     };
@@ -690,16 +752,34 @@ const AddArticle = () => {
                     const isChecked =
                         checkedState[row.original.reference_article || ""];
 
+                    const submitCondition =
+                        parseFloat(row.original.prix_final as string).toFixed(
+                            2
+                        ) === prixFinal;
+
                     if (isChecked)
                         return (
-                            <>
-                                <Input
-                                    className="w-full text-left mr-2 "
-                                    value={prixFinal}
-                                    onChange={(e) =>
-                                        setPrixFinal(e.target.value)
-                                    }
-                                />
+                            <div className=" flex gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <Input
+                                        type="number"
+                                        className="w-full text-left mr-2 "
+                                        value={prixFinal}
+                                        onChange={(e) =>
+                                            setPrixFinal(e.target.value)
+                                        }
+                                        title="Enregistrer avant de continuer"
+                                    />
+                                    <p
+                                        className={
+                                            submitCondition
+                                                ? "hidden"
+                                                : "text-[9px] text-nextblue-500"
+                                        }
+                                    >
+                                        Enregistrer avant de continuer.
+                                    </p>
+                                </div>
 
                                 {parseFloat(
                                     row.original.prix_final as string
@@ -716,7 +796,7 @@ const AddArticle = () => {
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </>
+                            </div>
                         );
                     return (
                         <span>
@@ -735,6 +815,15 @@ const AddArticle = () => {
                 accessorKey: "prix_net",
                 header: "Prix Net (€)",
                 cell: ({ row }) => {
+                    if (
+                        updatedRows[row.original.reference_article as string]
+                            ?.prix_net
+                    )
+                        return (
+                            updatedRows[
+                                row.original.reference_article as string
+                            ]?.prix_net + " €"
+                        );
                     return (
                         parseFloat(
                             (row.original.prix_net as string) || "0"
@@ -781,15 +870,24 @@ const AddArticle = () => {
         <div className="flex w-full relative h-full bg-slate-200 flex-col gap-1 overflow-y-auto px-3 py-1">
             <div className="w-full overflow-x-auto h-full px-2 py-1 flex flex-col gap-2 rounded-md border-2 bg-white border-slate-100">
                 <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50 pt-1">
-                    <Button
-                        className="bg-slate-500 hover:bg-slate-500/90"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleVisibleFilter();
-                        }}
-                    >
-                        Afficher les Filtres
-                    </Button>
+                    <div className="flex gap-2">
+                        <Link to={"/panier"}>
+                            <Button variant={"link"}>
+                                {" "}
+                                <Icon icon={"solar:arrow-left-linear"} />
+                                Liste des Commandes
+                            </Button>
+                        </Link>
+                        <Button
+                            className="bg-slate-500 hover:bg-slate-500/90"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleVisibleFilter();
+                            }}
+                        >
+                            Afficher les Filtres
+                        </Button>
+                    </div>
 
                     <div className="flex items-center gap-4">
                         <Button

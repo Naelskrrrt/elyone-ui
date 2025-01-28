@@ -181,7 +181,10 @@ export default function GenericTable({
                                 }}
                             >
                                 {headerGroup.headers.map((header, i) => {
-                                    if (hideKeys?.includes(header.id)) {
+                                    if (
+                                        hideKeys?.includes(header.id) ||
+                                        header.id == "id"
+                                    ) {
                                         return null;
                                     }
 
@@ -205,7 +208,10 @@ export default function GenericTable({
                                                             header.id ===
                                                                 "checkbox" ||
                                                             header.id ===
-                                                                "actions"
+                                                                "actions" ||
+                                                            header.id ===
+                                                                "drag-handle" ||
+                                                            header.id === "id"
                                                         ) {
                                                             return;
                                                         }
@@ -271,7 +277,8 @@ export default function GenericTable({
 
                                     if (
                                         hideKeys?.includes(header.id) ||
-                                        header.id == "actions"
+                                        header.id == "actions" ||
+                                        header.id == "id"
                                     ) {
                                         // return null; // Ignore cette colonne
                                         return null;

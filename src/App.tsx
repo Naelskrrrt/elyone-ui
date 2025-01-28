@@ -6,25 +6,28 @@ const HomeLayout = lazy(() => import("./pages/HomeLayout"));
 const AddArticle = lazy(() => import("./pages/AddArticle/AddArticle"));
 
 import Loader from "./components/loader/loader";
+import HistoriqueArticle from "./pages/HistoriqueArticle/HistoriqueArticle";
 
 const router = createBrowserRouter([
     {
         path: "/",
+        element: <p>Test</p>,
+    },
+    {
+        path: "/panier",
         element: <HomeLayout />,
         children: [
             {
                 path: "",
-                element: <Outlet />,
-                children: [
-                    {
-                        path: "",
-                        element: <HomePage />,
-                    },
-                    {
-                        path: "addArticle",
-                        element: <AddArticle />,
-                    },
-                ],
+                element: <HomePage />,
+            },
+            {
+                path: "addArticle",
+                element: <AddArticle />,
+            },
+            {
+                path: "history",
+                element: <HistoriqueArticle />,
             },
         ],
     },

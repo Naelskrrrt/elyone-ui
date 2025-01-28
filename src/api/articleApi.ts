@@ -2,6 +2,7 @@
 import axios from "axios";
 import {
     Article,
+    FetchArticlesGlobalHistoryResponse,
     FetchArticlesHistoryResponse,
     FetchArticlesParams,
     FetchArticlesResponse,
@@ -40,6 +41,39 @@ export const fetchArticles = async (
             deal_id,
         },
     });
+
+    return response.data;
+};
+
+export const fetchArticlesGlobalHistory = async (
+    params: FetchArticlesParams
+): Promise<FetchArticlesGlobalHistoryResponse> => {
+    const {
+        ct_num,
+        filter,
+        search,
+        page,
+        per_page,
+        sqlOrder,
+        hubspot_id,
+        deal_id,
+    } = params;
+
+    const response = await apiClient.get<FetchArticlesGlobalHistoryResponse>(
+        "/history/global",
+        {
+            params: {
+                ct_num,
+                filter: JSON.stringify(filter),
+                search,
+                page,
+                per_page,
+                sqlOrder,
+                hubspot_id,
+                deal_id,
+            },
+        }
+    );
 
     return response.data;
 };

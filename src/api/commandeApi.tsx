@@ -14,3 +14,14 @@ export const fetchCommandes = async (params: {
 
     return response.data;
 };
+
+export const deleteCommandes = async (
+    deleteRow: { id: string }[]
+): Promise<FetchCommandesResponse> => {
+    const response = await apiPannier.delete<FetchCommandesResponse>(
+        "/pannier",
+        { data: deleteRow }
+    );
+
+    return response.data;
+};

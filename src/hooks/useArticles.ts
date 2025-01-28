@@ -1,6 +1,10 @@
 // hooks/useArticles.ts
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { fetchArticleHistory, fetchArticles } from "../api/articleApi";
+import {
+    fetchArticleHistory,
+    fetchArticles,
+    fetchArticlesGlobalHistory,
+} from "../api/articleApi";
 import { FetchArticlesParams, FetchArticlesResponse } from "@/types/Article";
 
 // Hook pour récupérer les articles avec React Query
@@ -20,6 +24,15 @@ export const useArticleHistory = (params: any) => {
     return useQuery({
         queryKey: ["articleHistory", params],
         queryFn: () => fetchArticleHistory(params),
+        staleTime: 1000 * 60 * 5,
+        retry: 3,
+    });
+};
+
+export const useArticleGlobalHistory = (params: FetchArticlesParams) => {
+    return useQuery({
+        queryKey: ["articleGlobalHistory", params],
+        queryFn: () => fetchArticlesGlobalHistory(params),
         staleTime: 1000 * 60 * 5,
         retry: 3,
     });
