@@ -66,28 +66,13 @@ const HomePage = () => {
     ]); // Gérer dynamiquement les colonnes masquées
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
-    const {
-        data: commande,
-        isLoading,
-        // isError,
-        // error,
-        // refetch,
-    } = usePannier({
+    const { data: commande, isLoading } = usePannier({
         uuid: params?.uuid as string,
     });
 
-    // useEffect(() => {
-    //     if (commande) {
-    //         setPanier(commande.articles);
-    //     }
-    //     return () => {
-    //         setPanier([]);
-    //     };
-    // }, [commande]);
-
     const {
         data: articles,
-        isLoading: articleLoading,
+
         // isError,
         // error,
         // refetch,
@@ -764,7 +749,9 @@ const HomePage = () => {
                 cell: ({ row }) => {
                     return (
                         <Button
-                            onClick={() => {}}
+                            onClick={() => {
+                                console.log(row);
+                            }}
                             size={"icon"}
                             className="bg-red-100 text-red-500 hover:bg-red-100/80"
                         >

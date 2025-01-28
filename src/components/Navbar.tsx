@@ -1,9 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { Link, useLocation } from "react-router";
-import { Button } from "./ui/button";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useFetchClient } from "@/hooks/useFetchUsers";
 import { useUrlParams } from "@/context/UrlParamsContext";
+import { useFetchClient } from "@/hooks/useFetchUsers";
+import { Link, useLocation } from "react-router";
 
 // import ShadcnKit from "@/components/icons/shadcn-kit";
 // import { nanoid } from "nanoid";

@@ -1,4 +1,3 @@
-import { apiClient } from "@/infra/ApiClient";
 import axios from "axios";
 
 export const fetchClient = async (params: {
