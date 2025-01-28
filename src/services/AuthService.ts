@@ -44,7 +44,7 @@ const authService = {
             console.log("Logout Failed", error);
         }
     },
-    refreshAccessToken: async (): Promise<{ token: string } | undefined> => {
+    refreshAccessToken: async (): Promise<{ access: string } | undefined> => {
         try {
             const refreshToken = TokenService.getRefreshToken();
             const response = await apiClient.post<LoginResponse>(
@@ -56,7 +56,7 @@ const authService = {
 
             console.log("Refresh Response: ", response);
 
-            return { token: response.data.token };
+            return { access: response.data.token };
         } catch (error) {
             console.log("Refresh Error: ", error);
 

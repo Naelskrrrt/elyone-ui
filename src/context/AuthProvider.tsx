@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
             const response = await authService.refreshAccessToken();
             if (response) {
-                const { token: accessToken } = response;
+                const { access: accessToken } = response;
                 TokenService.setAccessToken(accessToken);
                 // const decodeAccessToken = jwtDecode(accessToken) as User;
                 return accessToken;
