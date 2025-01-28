@@ -2,16 +2,15 @@ import { Card } from "@/components/ui/card";
 import { useUrlParams } from "@/context/UrlParamsContext";
 import { useFetchClient } from "@/hooks/useFetchUsers";
 import { Link, useLocation } from "react-router";
-
-// import ShadcnKit from "@/components/icons/shadcn-kit";
-// import { nanoid } from "nanoid";
-// import Link from "next/link";
+import { Button } from "./ui/button";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { useAuth } from "@/context/AuthProvider";
 
 const Navbar = () => {
     const where = useLocation();
     const { params } = useUrlParams();
+    const { logout } = useAuth();
 
-    // console.log(where);
     const { data: user, isLoading } = useFetchClient({
         id_erp: params?.ct_num as string,
         hubspot_id: params?.hubspot_id as string,
@@ -20,11 +19,22 @@ const Navbar = () => {
     return (
         <Card className="bg-card py-3 w-full px-4 border-0 flex items-center justify-between gap-6 sticky top-0 flex-wrap">
             <div className="flex gap-12 items-center flex-wrap">
-                <img
-                    src="https://www.elyone.com/hubfs/Design%20sans%20titre%20(77).svg"
-                    alt="logo elyone"
-                    className="h-10 w-26 pointer-events-none"
-                />
+                <div className="flex gap-6 items-center">
+                    <img
+                        src="https://www.elyone.com/hubfs/Design%20sans%20titre%20(77).svg"
+                        alt="logo elyone"
+                        className="h-10 w-26 pointer-events-none"
+                    />
+                    <div className="flex flex-col">
+                        <span className="text-slate-400 text-xs font-semibold">
+                            Client
+                        </span>
+                        <h1 className="text-nextblue-500 font-bold text-xl">
+                            {isLoading ? "-" : user?.client_name}
+                            {/* {user?.client_name} */}
+                        </h1>
+                    </div>
+                </div>
                 <div className="flex gap-2 items-center">
                     <Link
                         to={"/panier"}
@@ -50,14 +60,16 @@ const Navbar = () => {
                     </Link>
                 </div>
             </div>
-            <div className="flex flex-col gap-0">
-                <span className="text-slate-400 text-xs font-semibold">
-                    Client
-                </span>
-                <h1 className="text-nextblue-500 font-bold text-xl">
-                    {isLoading ? "-" : user?.client_name}
-                    {/* {user?.client_name} */}
-                </h1>
+            <div className="flex gap-16 items-center">
+                <Link to={"/"}>
+                    <Button
+                        size={"icon"}
+                        className="bg-red-100 text-red-500 hover:bg-red-100/85"
+                        onClick={logout}
+                    >
+                        <Icon icon={"lucide:log-out"} />
+                    </Button>
+                </Link>
             </div>
         </Card>
     );
