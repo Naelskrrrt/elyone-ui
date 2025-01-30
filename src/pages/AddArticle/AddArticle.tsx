@@ -250,8 +250,6 @@ const AddArticle = () => {
         }));
     };
 
-    console.log("ROW on localstorage:", updatedRows);
-
     const columns = React.useMemo<ColumnDef<Article>[]>(
         () => [
             {
@@ -422,10 +420,22 @@ const AddArticle = () => {
                 id: "prix_achat1",
                 accessorKey: "prix_achat1",
                 header: "Prix Achat (€)",
-                cell: (info) =>
-                    formatNumber(
-                        parseFloat(info.getValue<string>() || "0").toFixed(2)
-                    ) + " €",
+                cell: ({ row }) => {
+                    if (user.show_purchase_price == 1)
+                        return (
+                            formatNumber(
+                                parseFloat(
+                                    row.original.prix_achat1 || "0"
+                                ).toFixed(2)
+                            ) + " €"
+                        );
+                    return (
+                        <span className="bg-orange-100 px-2 rounded-sm py-2 text-orange-500 font-semibold text-sm flex items-center gap-2">
+                            <Icon icon={"flowbite:eye-slash-solid"} />
+                            <span>Masqués</span>
+                        </span>
+                    );
+                },
             },
             {
                 // 7
@@ -433,10 +443,22 @@ const AddArticle = () => {
                 id: "dernier_prix_achat",
                 accessorKey: "dernier_prix_achat",
                 header: "Dernier Prix Achat (€)",
-                cell: (info) =>
-                    formatNumber(
-                        parseFloat(info.getValue<string>() || "0").toFixed(2)
-                    ) + " €",
+                cell: ({ row }) => {
+                    if (user.show_purchase_price == 1)
+                        return (
+                            formatNumber(
+                                parseFloat(
+                                    row.original.dernier_prix_achat || "0"
+                                ).toFixed(2)
+                            ) + " €"
+                        );
+                    return (
+                        <span className="bg-orange-100 px-1 py-2 text-orange-500 font-semibold text-sm flex items-center gap-2">
+                            <Icon icon={"flowbite:eye-slash-solid"} />
+                            <span>Masqués</span>
+                        </span>
+                    );
+                },
             },
             {
                 // 8

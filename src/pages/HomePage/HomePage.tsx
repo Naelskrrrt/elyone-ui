@@ -46,6 +46,7 @@ interface SendConfirmState {
 
 interface UserData {
     email: string;
+    show_purchase_price: number;
     // Ajouter d'autres propriétés au besoin
 }
 
@@ -65,7 +66,10 @@ const HomePage = () => {
         isClearCart: false,
     });
 
-    const [user, setUser] = useLocalStorage<UserData>("user", { email: "" });
+    const [user, setUser] = useLocalStorage<UserData>("user", {
+        email: "",
+        show_purchase_price: 0,
+    });
     useEffect(() => {
         const token = window.localStorage.getItem("access");
         const user = jwtDecode<any>(token as string);
@@ -135,8 +139,8 @@ const HomePage = () => {
         const formattedCommande = commandeState.map((item) => ({
             reference: item.reference_article || "",
             designation: item.designation_article || "",
-            prixNet: parseFloat(item.prix_vente || "0"),
-            prixUnitaire: parseFloat(item.prix_net || "0"),
+            prixNet: parseFloat(item.prix_net || "0"),
+            prixUnitaire: parseFloat(item.prix_final || "0"),
             quantity: parseInt(item.quantite || "1"),
             remise_finale: parseFloat(item.remise_finale || "0"),
         }));
@@ -190,8 +194,7 @@ const HomePage = () => {
 
         try {
             const response = await deleteCommandes(articleId.join(","), uuid);
-            if (response.status !== 200)
-                throw new Error("Erreur de suppression");
+            console.log(response);
             toast.success("Article supprimé !");
             queryClient.invalidateQueries({ queryKey: ["pannier"] });
         } catch (error) {
