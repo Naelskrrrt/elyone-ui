@@ -1,19 +1,19 @@
 import GenericTable from "@/components/CommandeTable/GenericTable";
 import { Icon } from "@iconify/react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
+import { deleteCommandes, sendToHubspot } from "@/api/commandeApi";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useUrlParams } from "@/context/UrlParamsContext";
-import { usePannier } from "@/hooks/usePannier";
-import { Article, Commandes } from "@/types/Article";
-import { UniqueIdentifier } from "@dnd-kit/core";
-import { useSortable } from "@dnd-kit/sortable";
-import { ColumnDef } from "@tanstack/react-table";
-import { useLocalStorage } from "@uidotdev/usehooks";
-import { Link } from "react-router";
-import { toast, Toaster } from "sonner";
-// import { ArticleHistoryDialog } from "../AddArticle/ArticleHistoryModal/ArticleHistory";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -22,157 +22,161 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useUrlParams } from "@/context/UrlParamsContext";
 import { useArticles } from "@/hooks/useArticles";
-import { DragEndEvent } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-import { useQueryClient } from "@tanstack/react-query";
+import { usePannier } from "@/hooks/usePannier";
+import { Article, Commandes } from "@/types/Article";
+import { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
+import { arrayMove, useSortable } from "@dnd-kit/sortable";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ColumnDef } from "@tanstack/react-table";
+import { useLocalStorage } from "@uidotdev/usehooks";
+import { AxiosError } from "axios";
+import { jwtDecode } from "jwt-decode";
+import { Link } from "react-router";
+import { toast, Toaster } from "sonner";
 
 const HomePage = () => {
     const [hideKeys, setHideKeys] = useState<string[]>([
-        "mise_en_sommeil",
-        "prix_ttc",
-        // "prix_vente",
-        "prix_achat1",
-        "dernier_prix_achat",
-        "stock",
         "code_famille",
-        "",
-        "Qtecommandeclient",
-        "QtecommandeAchat",
+        "prix_ttc",
         "AR_StockTerme",
-        "catalogue1_intitule",
-        "catalogue2_intitule",
-        "catalogue3_intitule",
-        "catalogue4_intitule",
-        "marque_commerciale",
-        "objectif_qtes_vendues",
-        "pourcentage_or",
-        "premiere_commercialisation",
-        "AR_InterdireCommande",
-        "AR_Exclure",
-        "dossier_hs",
-        "equivalent_75",
-        "ref_bis",
-        "remise_client",
-        "prix_vente_client",
-        "remise_categorie",
         "prix_vente",
-        "prix_cat",
-        "remise_famille",
-        // "remise_finale",
-        // "prix_final",
-        // "prix_net",
-        // "actions",
     ]); // Gérer dynamiquement les colonnes masquées
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
-    const { data: commande, isLoading } = usePannier({
-        uuid: params?.uuid as string,
+    const [totalRemise, setTotalRemise] = useState<number>(0);
+    const [totalHorsTaxe, settotalHorsTaxe] = useState<number>(0);
+    const [sendConfirm, setSendConfirm] = useState<any>({
+        isSyncErp: false,
+        isClearCart: false,
     });
 
-    const {
-        data: articles,
+    const [user, setUser] = useLocalStorage<any>("user", null);
 
-        // isError,
-        // error,
-        // refetch,
-    } = useArticles({
+    useEffect(() => {
+        const token = window.localStorage.getItem("access");
+        const user = jwtDecode<any>(token as string);
+        setUser(user);
+    }, []);
+
+    const {
+        data: commande,
+        isLoading,
+        refetch,
+    } = usePannier({
+        uuid: user?.email as string,
+    });
+
+    const { data: articles } = useArticles({
         ct_num: params?.ct_num || "EXAMPLE",
-        // filter: { ""},
-        // search: search,
-        // page: currentPage + 1, // La pagination dans React Query est souvent 1-indexée
-        // per_page: articlePerPage,
-        // sqlOrder: sortState,
+
         hubspot_id: params?.hubspot_id || "",
         deal_id: params?.deal_id || "",
     });
 
     const queryClient = useQueryClient();
 
-    const handleRefresh = () => {
-        queryClient.invalidateQueries({ queryKey: ["pannier"] });
-    };
-
     const handleToggleColumnVisibility = (id: string) => {
-        // setFilters({});
         setHideKeys((prev) =>
             prev.includes(id) ? prev.filter((key) => key !== id) : [...prev, id]
         );
     };
 
-    const [commandeState, setCommande] = useLocalStorage<Commandes[] | null>(
-        "panier",
-        commande?.articles || null
-    );
-
-    const addCommande = (newArticles: Commandes[]) => {
-        if (!commandeState) {
-            setCommande(newArticles); // Si `commandeState` est null, ajoute les articles directement
-        } else {
-            const articlesExistants = new Set(
-                commandeState.map((item) => item.id)
-            ); // Supposons que chaque article a un champ `id` unique
-            const articlesAjouter = newArticles.filter(
-                (item) => !articlesExistants.has(item.id)
-            );
-
-            if (articlesAjouter.length > 0) {
-                setCommande([...commandeState, ...articlesAjouter]);
-            }
-        }
-    };
+    const [commandeState, setCommande] = useState<Commandes[] | null>(null);
 
     useEffect(() => {
         if (commande?.articles) {
-            addCommande(commande.articles);
+            setCommande(commande.articles);
         }
     }, [commande?.articles]);
 
     const dataIds = React.useMemo<UniqueIdentifier[]>(
-        () => (commandeState ? commandeState.map((item) => item.id) : []),
+        () =>
+            commandeState ? commandeState.map((item) => String(item.id)) : [],
         [commandeState]
     );
 
-    function handleDragEnd(event: DragEndEvent) {
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
         const { active, over } = event;
-        if (active && over && active.id !== over.id) {
-            setCommande((prevCommande) => {
-                if (!prevCommande) return null;
+        if (!active || !over || active.id === over.id) return;
 
-                const oldIndex = prevCommande.findIndex(
-                    (item) => item.id === active.id
-                );
-                const newIndex = prevCommande.findIndex(
-                    (item) => item.id === over.id
-                );
+        console.log("Dragged ID:", active.id, "Over ID:", over.id);
 
-                if (oldIndex === -1 || newIndex === -1) return prevCommande;
+        setCommande((prevCommande) => {
+            if (!prevCommande) return null;
 
-                const updatedCommande = arrayMove(
-                    prevCommande,
-                    oldIndex,
-                    newIndex
-                );
-                return updatedCommande;
-            });
-        }
-    }
+            const oldIndex = prevCommande.findIndex(
+                (item) => String(item.id) === String(active.id)
+            );
+            const newIndex = prevCommande.findIndex(
+                (item) => String(item.id) === String(over.id)
+            );
+
+            if (oldIndex === -1 || newIndex === -1) return prevCommande;
+
+            return arrayMove(prevCommande, oldIndex, newIndex);
+        });
+    }, []);
+
+    // console.log(commandeState);
+
+    const handleSendHubspot = () => {
+        if (!commandeState) return;
+
+        const formattedCommande = commandeState.map((item) => ({
+            reference: item.reference_article || "",
+            designation: item.designation_article || "",
+            prixNet: parseFloat(item.prix_vente || "0"),
+            prixUnitaire: parseFloat(item.prix_net || "0"),
+            quantity: parseInt(item.quantite || "1"),
+            remise_finale: parseFloat(item.remise_finale || "0"),
+        }));
+        console.log("Commande formatée :", formattedCommande);
+        mutation.mutate({
+            articles: formattedCommande,
+            hubspot_id: "8021036",
+            transaction_id: "29895783826",
+            sync_erp: sendConfirm.isSyncErp ? "OUI" : "",
+            clear_cart: sendConfirm.isClearCart,
+        });
+        // return formattedCommande;
+    };
 
     const updateRowData = (rowId: number, rowData: Partial<Commandes>) => {
         setCommande((prev) => {
             if (!prev) return null;
-            return prev.map((item) =>
+
+            const updatedCommande = prev.map((item) =>
                 item.id === rowId
                     ? ({ ...item, ...rowData } as Commandes)
                     : item
             );
+
+            // Trouver l'article mis à jour
+            const updatedArticle = updatedCommande.find(
+                (item) => item.id === rowId
+            );
+
+            // Envoyer la mise à jour à l'API
+            if (updatedArticle) {
+                updateSingleArticle(updatedArticle);
+            }
+
+            return updatedCommande;
         });
     };
 
     const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
-        const { attributes, listeners } = useSortable({
-            id: rowId || "",
-        });
+        if (!rowId) {
+            console.error("Row ID is missing for sortable row!");
+            return null;
+        }
+
+        const { attributes, listeners } = useSortable({ id: rowId });
+
         return (
             <button {...attributes} {...listeners}>
                 <Icon icon={"lsicon:drag-outline"} className="scale-150" />
@@ -180,13 +184,98 @@ const HomePage = () => {
         );
     };
 
+    const handleDeleteRow = (articleId: number[], uuid: string) => {
+        if (!uuid) return;
+
+        try {
+            const response = deleteCommandes(articleId.join(","), uuid);
+            console.log(response);
+            toast.success("Article supprimé !");
+            queryClient.invalidateQueries({ queryKey: ["pannier"] });
+        } catch (error: any) {
+            console.error("Erreur lors de la suppression de l'article", error);
+        }
+        refetch();
+    };
+
+    const updateSingleArticle = async (article: Commandes) => {
+        if (!user?.email) return;
+
+        try {
+            const response = await fetch(
+                `${import.meta.env.VITE_API_URL}/api/pannier?articleId=${
+                    article.id
+                }&uuid=${user.email}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(article), // Envoyer l'article mis à jour
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Erreur lors de la mise à jour de l'article.");
+            }
+
+            toast.success(`Article ${article.reference_article} mis à jour !`);
+            queryClient.invalidateQueries({ queryKey: ["pannier"] });
+        } catch (error) {
+            toast.error("Échec de la mise à jour de l'article !");
+            console.error("Erreur:", error);
+        }
+    };
+
     useEffect(() => {
         const totalPrixNet = (commandeState || []).reduce(
-            (sum, article) => sum + parseFloat(article.total_ht_net || "0"),
+            (sum, article) =>
+                sum + parseFloat((article.total_ht_net as string) || "0"),
             0
         );
+
+        const totalRemise = (commandeState || []).reduce(
+            (sum, article) =>
+                sum + parseFloat((article.remise_finale as string) || "0"),
+            0
+        );
+
+        const totalHorsTaxe = (commandeState || []).reduce(
+            (sum, articles) =>
+                sum +
+                parseFloat(articles.prix_final || "0") *
+                    parseFloat(articles.quantite || "1"),
+            0
+        );
+        console.log(totalPrixNet);
         setTotalPrixNet(totalPrixNet);
-    }, [commandeState]);
+        setTotalRemise(totalRemise);
+        settotalHorsTaxe(totalHorsTaxe);
+    }, [updateRowData, commandeState]);
+    const handleRefresh = () => {
+        // updateCommandeOnServer();
+        queryClient.invalidateQueries({ queryKey: ["pannier"] });
+    };
+
+    const mutation = useMutation({
+        mutationFn: sendToHubspot,
+        onSuccess: () => {
+            toast.success("Les articles ont été ajoutés au panier");
+            queryClient.invalidateQueries({ queryKey: ["pannier"] });
+            queryClient.invalidateQueries({ queryKey: ["articles"] });
+            const articleIds = commandeState?.map((item) => item.id) || [];
+            // TODO: Vider le panier dans le backend
+            handleDeleteRow(articleIds, user.email);
+            setIsConfirmDialogOpen(false);
+        },
+        onError: (error: AxiosError) => {
+            if (error.status === 500)
+                toast.error("Erreur lors de l'envoi des données", {
+                    description: "Veuillez réessayer plus tard !",
+                });
+            else toast.error("Erreur lors de l'envoi des données");
+        },
+    });
 
     const columns = React.useMemo<ColumnDef<Article>[]>(
         () => [
@@ -220,6 +309,7 @@ const HomePage = () => {
                             prix_final: row.original.prix_final || "",
                             remise_finale: row.original.remise_finale || "",
                             prix_net: row.original.prix_net,
+                            total_ht_net: row.original.total_ht_net,
                         });
                         toast.info("Désignation mise à jour");
                     };
@@ -263,7 +353,44 @@ const HomePage = () => {
                         </div>
                     );
                 },
-                size: 400,
+                size: 350,
+            },
+            {
+                // 2
+                id: "code_famille",
+                accessorKey: "code_famille",
+                header: "Code Famille",
+                cell: (info) => info.getValue(),
+                size: 150,
+            },
+
+            {
+                // 4
+                id: "prix_ttc",
+                accessorKey: "prix_ttc",
+                header: "Prix TTC",
+                cell: (info) =>
+                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                    " €",
+            },
+            {
+                // 5
+                id: "prix_vente",
+                accessorKey: "prix_vente",
+                header: "Prix Vente HT",
+                cell: (info) =>
+                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
+                    " €",
+                size: 160,
+            },
+
+            {
+                // 11 stock à terme
+                id: "AR_StockTerme",
+                accessorKey: "AR_StockTerme",
+                header: "Stock à Terme",
+                cell: (info) =>
+                    parseFloat(info.getValue() as string).toFixed(2),
             },
             {
                 // Quantité
@@ -286,6 +413,9 @@ const HomePage = () => {
                                 row.original.designation_article || "",
                             prix_final: row.original.prix_final || "",
                             prix_ttc: row.original.prix_ttc || "",
+                            total_ht_net:
+                                parseFloat(row.original.prix_ttc as string) *
+                                data.quantite,
                         });
                     };
 
@@ -333,224 +463,6 @@ const HomePage = () => {
                 },
                 size: 200,
             },
-            {
-                // 2
-                id: "code_famille",
-                accessorKey: "code_famille",
-                header: "Code Famille",
-                cell: (info) => info.getValue(),
-                size: 150,
-            },
-            {
-                // 3
-                id: "mise_en_sommeil",
-                accessorKey: "mise_en_sommeil",
-                header: "Mise en Sommeil",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 4
-                id: "prix_ttc",
-                accessorKey: "prix_ttc",
-                header: "Prix TTC",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-            {
-                // 5
-                id: "prix_vente",
-                accessorKey: "prix_vente",
-                header: "Prix Vente HT",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-                size: 160,
-            },
-
-            {
-                // 6
-                id: "prix_achat1",
-                accessorKey: "prix_achat1",
-                header: "Prix Achat (€)",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-            {
-                // 7
-                // PRIX UNITAIRE D'ACHAT
-                id: "dernier_prix_achat",
-                accessorKey: "dernier_prix_achat",
-                header: "Dernier Prix Achat (€)",
-                cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
-            },
-            {
-                // 8
-                id: "stock",
-                accessorKey: "stock",
-                header: " Qte Stock",
-                cell: (info) => parseInt(info.getValue<string>() || "0"),
-            },
-            {
-                // 9
-                id: "Qtecommandeclient",
-                accessorKey: "Qtecommandeclient",
-                header: "Qté Commandée Client",
-                cell: (info) => parseInt(info.getValue<string>() || "0"),
-                size: 200,
-            },
-            {
-                // 10
-                id: "QtecommandeAchat",
-                accessorKey: "QtecommandeAchat",
-                header: "Qté Commandée Achat",
-                cell: (info) => parseInt(info.getValue<string>() || "0"),
-                size: 200,
-            },
-            {
-                // 11 stock à terme
-                id: "AR_StockTerme",
-                accessorKey: "AR_StockTerme",
-                header: "Stock à Terme",
-                cell: (info) =>
-                    parseFloat(info.getValue() as string).toFixed(2),
-            },
-            {
-                // 12
-                id: "catalogue1_intitule",
-                accessorKey: "catalogue1_intitule",
-                header: "Catalogue 1",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-            {
-                // 13
-                id: "catalogue2_intitule",
-                accessorKey: "catalogue2_intitule",
-                header: "Catalogue 2",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-            {
-                // 14
-                id: "catalogue3_intitule",
-                accessorKey: "catalogue3_intitule",
-                header: "Catalogue 3",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-            {
-                // 15
-                id: "catalogue4_intitule",
-                accessorKey: "catalogue4_intitule",
-                header: "Catalogue 4",
-                cell: (info) => info.getValue() || "Non renseigné",
-            },
-
-            {
-                // 16
-                id: "marque_commerciale",
-                accessorKey: "marque_commerciale",
-                header: "Marque Commerciale",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 17
-                id: "objectif_qtes_vendues",
-                accessorKey: "objectif_qtes_vendues",
-                header: "Objectif/Qtés Vendues",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 18
-                id: "pourcentage_or",
-                accessorKey: "pourcentage_or",
-                header: "Pourcentage OR",
-                cell: (info) => info.getValue(),
-            },
-
-            {
-                // 19
-                id: "premiere_commercialisation",
-                accessorKey: "premiere_commercialisation",
-                header: "1ère Comm",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 20
-                id: "AR_InterdireCommande",
-                accessorKey: "AR_InterdireCommande",
-                header: "Commande Interdite",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 21
-                id: "AR_Exclure",
-                accessorKey: "AR_Exclure",
-                header: "Exclure",
-                cell: (info) => info.getValue(),
-            },
-
-            {
-                // 22
-                id: "dossier_hs",
-                accessorKey: "dossier_hs",
-                header: "Dossier HS",
-                cell: (info) => info.getValue(),
-            },
-
-            {
-                // 23
-                id: "equivalent_75",
-                accessorKey: "equivalent_75",
-                header: "Équivalent 75",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 24
-                id: "ref_bis",
-                accessorKey: "ref_bis",
-                header: "Référence Bis",
-                cell: (info) => info.getValue(),
-            },
-            {
-                // 25
-                id: "remise_client",
-                accessorKey: "remise_client",
-                header: "Remise Client",
-                cell: (info) => info.getValue() || "Aucune",
-            },
-            {
-                // 26
-                id: "prix_vente_client",
-                accessorKey: "prix_vente_client",
-                header: "Prix Client",
-                cell: (info) => info.getValue() || "Aucune",
-            },
-            {
-                // 27
-                id: "remise_categorie",
-                accessorKey: "remise_categorie",
-                header: "Remise Catégorie",
-                cell: (info) => info.getValue() || "Aucune",
-            },
-            {
-                // 28
-                id: "prix_cat",
-                accessorKey: "prix_cat",
-                header: "Prix Catégorie",
-                cell: ({ row }) =>
-                    parseFloat(row.original.prix_vente || "0").toFixed(2) +
-                    " €",
-                size: 170,
-            },
-            {
-                // 29
-                id: "remise_famille",
-                accessorKey: "remise_famille",
-                header: "Remise Famille",
-                cell: (info) => info.getValue() || "Aucune",
-            },
 
             {
                 // 31
@@ -583,6 +495,10 @@ const HomePage = () => {
                             )
                                 .toFixed(2)
                                 .toString(),
+                            total_ht_net:
+                                (data.prixFinal -
+                                    (data.prixFinal * remiseFinale) / 100) *
+                                parseInt(row.original.quantite as string),
                         });
                     };
 
@@ -663,6 +579,11 @@ const HomePage = () => {
                                 .toFixed(2)
                                 .toString(),
                             // Prix Net = Prix Final – (Prix Final * Remise Final/100)
+                            total_ht_net:
+                                (prixFinal -
+                                    (prixFinal * parseFloat(data.remise)) /
+                                        100) *
+                                parseInt(row.original.quantite as string),
                         });
                     };
 
@@ -683,6 +604,8 @@ const HomePage = () => {
                                         setRemise(e.target.value);
                                     }}
                                     className="w-full text-left mr-2 "
+                                    min={0}
+                                    max={100}
                                 />
                                 <p
                                     className={
@@ -750,7 +673,10 @@ const HomePage = () => {
                     return (
                         <Button
                             onClick={() => {
-                                console.log(row);
+                                handleDeleteRow(
+                                    [row.original.id as number],
+                                    user.email
+                                );
                             }}
                             size={"icon"}
                             className="bg-red-100 text-red-500 hover:bg-red-100/80"
@@ -759,10 +685,39 @@ const HomePage = () => {
                         </Button>
                     );
                 },
+                size: 100,
             },
         ],
-        [updateRowData, commandeState]
+        [
+            updateRowData,
+            commandeState,
+            totalPrixNet,
+            totalRemise,
+            totalHorsTaxe,
+            sendConfirm,
+            dataIds,
+        ]
     );
+
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+
+    const handleCheckboxChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const { id, checked } = event.target;
+        setSendConfirm(
+            (prevState: { isSyncErp: boolean; isClearCart: boolean }) => {
+                const newState = { ...prevState, [id]: checked };
+                if (id === "isSyncErp" && checked) {
+                    setIsDialogOpen(true);
+                }
+                return newState;
+            }
+        );
+    };
+    console.log(sendConfirm);
+
     return (
         <>
             <div className="flex w-full relative h-full  flex-col gap-0  overflow-y-auto px-3  py-3">
@@ -776,19 +731,135 @@ const HomePage = () => {
                         </h2>
                     </div> */}
                 <div className="w-full overflow-x-auto h-full px-2 py-1 flex flex-col gap-2 rounded-md border-2 bg-white border-slate-100">
-                    <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50 pt-1">
-                        <Button
-                            className="bg-green-500  font-medium hover:bg-green-500/85 hover:text-slate-50"
-                            size={"sm"}
+                    <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50 pt-1 flex-wrap">
+                        <Dialog
+                            open={isConfirmDialogOpen}
+                            onOpenChange={setIsConfirmDialogOpen}
                         >
-                            <Icon
-                                icon={"solar:cart-check-broken"}
-                                width={24}
-                                height={24}
-                                className="scale-125"
-                            />
-                            Valider le panier
-                        </Button>
+                            <DialogTrigger asChild>
+                                <Button
+                                    className="bg-green-500  font-medium hover:bg-green-500/85 hover:text-slate-50"
+                                    size={"sm"}
+                                >
+                                    <Icon
+                                        icon={"solar:cart-check-broken"}
+                                        width={24}
+                                        height={24}
+                                        className="scale-125"
+                                    />
+                                    Valider le panier
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>
+                                        Envoyer les données vers Hubspot
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Veuillez confirmer l'envoi des données
+                                        avec les params à prendre en compte.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="flex flex-col">
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            id="isSyncErp"
+                                            type="checkbox"
+                                            className="w-4"
+                                            checked={sendConfirm.isSyncErp}
+                                            onChange={handleCheckboxChange}
+                                        />
+                                        <Label
+                                            htmlFor="isSyncErp"
+                                            className="text-right"
+                                        >
+                                            Synchronisé avec l'ERP.
+                                        </Label>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            id="isClearCart"
+                                            type="checkbox"
+                                            className="w-4"
+                                            checked={sendConfirm.isClearCart}
+                                            onChange={handleCheckboxChange}
+                                        />
+                                        <Label
+                                            htmlFor="isClearCart"
+                                            className="text-right"
+                                        >
+                                            Effacer la cart avant d'ajouter les
+                                            données.
+                                        </Label>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button
+                                            onClick={() => {
+                                                setSendConfirm({
+                                                    isSyncErp: false,
+                                                    isClearCart: false,
+                                                });
+                                            }}
+                                            type="button"
+                                            variant="destructive"
+                                            className="bg-red-100 text-red-500 hover:bg-red-100/80"
+                                        >
+                                            Annuler
+                                        </Button>
+                                    </DialogClose>
+                                    <Button
+                                        type="submit"
+                                        onClick={handleSendHubspot}
+                                    >
+                                        Envoyer
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                        <Dialog
+                            open={isDialogOpen}
+                            onOpenChange={setIsDialogOpen}
+                        >
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>
+                                        Confirmation requise
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                        Êtes-vous sûr de vouloir synchroniser
+                                        avec l'ERP ? Cette action est
+                                        irréversible.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button
+                                            variant="destructive"
+                                            onClick={() =>
+                                                setSendConfirm(
+                                                    (prev: {
+                                                        isSyncErp: boolean;
+                                                        isClearCart: boolean;
+                                                    }) => ({
+                                                        ...prev,
+                                                        isSyncErp: false,
+                                                    })
+                                                )
+                                            }
+                                        >
+                                            Annuler
+                                        </Button>
+                                    </DialogClose>
+                                    <Button
+                                        onClick={() => setIsDialogOpen(false)}
+                                    >
+                                        Confirmer
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                         <div className="flex items-center gap-4">
                             <Link to={"/panier/addArticle"}>
                                 <Button
@@ -874,37 +945,37 @@ const HomePage = () => {
                         ]}
                         handleFilterChange={() => {}}
                     />
-                    <div className=" flex flex-wrap justify-evenly  h-[50%] w-full overflow-hidden relative gap-1">
-                        <div className="bg-slate-100 w-1/5 min-w-[300px] h-fit py-6 px-4 rounded-md">
-                            <h1 className="font-semibold text-slate-400 text-xl">
+                    <div className=" flex flex-wrap justify-between items-end  h-[50%] w-full overflow-hidden relative gap-1 pb-2">
+                        <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
+                            <h1 className="font-semibold text-slate-400 text-lg">
                                 Total HT
                             </h1>
-                            <h1 className="text-nextblue-500 font-bold text-3xl">
-                                {totalPrixNet}
+                            <h1 className="text-nextblue-500 font-bold text-xl">
+                                {totalHorsTaxe} €
                             </h1>
                         </div>
-                        <div className="bg-slate-100 w-1/5 min-w-[300px] h-fit py-6 px-4 rounded-md">
-                            <h1 className="font-semibold text-slate-400 text-xl">
+                        <div className="bg-slate-100 w-1/5  min-w-[200px] h-fit py-2 px-3 rounded-md">
+                            <h1 className="font-semibold text-slate-400 text-lg">
                                 Total Remise
                             </h1>
-                            <h1 className="text-nextblue-500 font-bold text-3xl">
-                                1000 $
+                            <h1 className="text-nextblue-500 font-bold text-xl">
+                                {totalRemise} %
                             </h1>
                         </div>
-                        <div className="bg-slate-100 w-1/5 min-w-[300px] h-fit py-6 px-4 rounded-md">
-                            <h1 className="font-semibold text-slate-400 text-xl">
+                        <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
+                            <h1 className="font-semibold text-slate-400 text-lg">
                                 Total HT Net
                             </h1>
-                            <h1 className="text-nextblue-500 font-bold text-3xl">
-                                1000 $
+                            <h1 className="text-nextblue-500 font-bold text-xl">
+                                {totalPrixNet.toFixed(2)} €
                             </h1>
                         </div>
-                        <div className="bg-slate-100 w-1/5 min-w-[300px] h-fit py-6 px-4 rounded-md">
-                            <h1 className="font-semibold text-slate-400 text-xl">
+                        <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
+                            <h1 className="font-semibold text-slate-400 text-lg">
                                 Total TTC 20%
                             </h1>
-                            <h1 className="text-nextblue-500 font-bold text-4xl">
-                                1000 $
+                            <h1 className="text-nextblue-500 font-bold text-xl">
+                                {(totalPrixNet * 1.2).toFixed(2)} €
                             </h1>
                         </div>
                     </div>

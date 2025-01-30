@@ -71,7 +71,7 @@ const AddArticle = () => {
         deal_id: params?.deal_id || "",
     });
 
-    console.log("Filtres", filters);
+    console.log("History", history);
     console.log("Trier", sortState);
 
     const totalArticles = history?.total;

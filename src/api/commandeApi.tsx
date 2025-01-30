@@ -1,5 +1,10 @@
 import { apiPannier } from "@/infra/ApiClient";
-import { FetchCommandesResponse } from "@/types/Article";
+import {
+    ArticleSendType,
+    FetchCommandesResponse,
+    SendArticleToHubspot,
+} from "@/types/Article";
+import axios from "axios";
 
 export const fetchCommandes = async (params: {
     uuid: string;
@@ -16,11 +21,26 @@ export const fetchCommandes = async (params: {
 };
 
 export const deleteCommandes = async (
-    deleteRow: { id: string }[]
+    articleId: string,
+    uuid: string
 ): Promise<FetchCommandesResponse> => {
     const response = await apiPannier.delete<FetchCommandesResponse>(
         "/pannier",
-        { data: deleteRow }
+        {
+            params: {
+                articleId,
+                uuid,
+            },
+        }
+    );
+
+    return response.data;
+};
+
+export const sendToHubspot = async (data: SendArticleToHubspot) => {
+    const response = await axios.post(
+        import.meta.env.VITE_API_URL + "/cart/send-to-hubspot",
+        data
     );
 
     return response.data;

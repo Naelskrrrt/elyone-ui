@@ -93,7 +93,7 @@ export interface Commandes {
     AR_StockTerme?: string | null;
     uuid?: string;
     quantite?: string;
-    total_ht_net?: string;
+    total_ht_net?: string | number;
 }
 
 export type ArticleHistory = {
@@ -148,4 +148,21 @@ export interface GlobalHistory {
     remise: string;
     prix_remise: string;
     total_ht_net: string;
+}
+
+export interface ArticleSendType {
+    reference: string;
+    designation: string;
+    prixNet?: number;
+    prixUnitaire?: number;
+    quantity?: number;
+    remise_finale?: number;
+}
+
+export interface SendArticleToHubspot {
+    articles: ArticleSendType[];
+    transaction_id: string;
+    hubspot_id: string;
+    clear_cart: boolean;
+    sync_erp?: string;
 }

@@ -33,31 +33,32 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Loader from "../loader/loader";
 import { Input } from "../ui/input";
+import { Article, Commandes } from "@/types/Article";
 
 const DraggableRow = ({
     row,
     hideKeys,
 }: {
-    row: Row<any>;
+    row: Row<Article[] | Commandes[]>;
     hideKeys?: string[];
 }) => {
     const { transform, transition, setNodeRef, isDragging } = useSortable({
-        id: row.original.id as UniqueIdentifier, // Utilisez une clé unique ici
+        id: row.id,
     });
 
     const style: CSSProperties = {
         transform: CSS.Transform.toString(transform),
         transition: transition,
-        // opacity: isDragging ? 0.5 : 1,
         zIndex: isDragging ? 1 : 0,
         display: "flex",
+        opacity: isDragging ? 0.5 : 1,
     };
 
     return (
         <tr ref={setNodeRef} style={style}>
             {row
                 .getVisibleCells()
-                .filter((cell) => !hideKeys?.includes(cell.column.id)) // Exclure les colonnes masquées
+                .filter((cell) => !hideKeys?.includes(cell.column.id))
                 .map((cell) => (
                     <td key={cell.id} style={{ width: cell.column.getSize() }}>
                         {flexRender(
@@ -88,7 +89,7 @@ export default function GenericTable({
 {
     columns: ColumnDef<any>[];
     data?: any;
-    dataId?: UniqueIdentifier[];
+    dataId: UniqueIdentifier[];
     handleDragEnd?: (event: DragEndEvent) => void;
     isLoading?: boolean;
     handleFilterChange: (key: string, value: string) => void;
@@ -112,7 +113,7 @@ export default function GenericTable({
         // onColumnVisibilityChange: setColumnVisibility,
         columnResizeMode: "onChange",
         getCoreRowModel: getCoreRowModel(),
-        getRowId: (row) => row.id || row.id,
+        getRowId: (row) => row.id,
     });
 
     // reorder rows after drag & drop
@@ -365,7 +366,7 @@ function TableBody({
     hideKeys,
 }: {
     table: Table<any>;
-    dataIds?: UniqueIdentifier[];
+    dataIds: UniqueIdentifier[];
     hideKeys?: string[];
 }) {
     // console.log(table.getAllColumns());
@@ -382,7 +383,7 @@ function TableBody({
                     dataIds ? (
                         <SortableContext
                             key={dataIds.join("-")}
-                            items={dataIds as UniqueIdentifier[]}
+                            items={dataIds}
                             strategy={verticalListSortingStrategy}
                         >
                             {table.getRowModel().rows.map((row) => {

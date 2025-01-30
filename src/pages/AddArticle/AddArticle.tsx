@@ -80,10 +80,12 @@ const AddArticle = () => {
         // "prix_net",
         // "actions",
     ]); // Gérer dynamiquement les colonnes masquées
+
     const { params } = useUrlParams();
     const [showFilters, setShowFilters] = useState<Boolean>(false);
     const [currentPage, setCurrentPage] = useState(0);
     const [paginationKey, setPaginationKey] = useState(Date.now());
+    const [user, setUser] = useState<any | null>();
     const [sortState, setSortState] = useState<{
         index: string;
         value: "ASC" | "DESC";
@@ -180,12 +182,17 @@ const AddArticle = () => {
         setUpdatedRows({});
     };
 
-    console.log(params);
+    useEffect(() => {
+        const user = window.localStorage.getItem("user");
+        setUser(JSON.parse(user as string));
+    }, []);
+
+    console.log("user", user);
 
     const handleSendArticle = () => {
         const dataToSend = Object.entries(updatedRows).map(([_, value]) => ({
             ...value,
-            uuid: params?.uuid,
+            uuid: user?.email,
         })) as Article[];
         console.log(dataToSend);
         mutation.mutate(dataToSend);
@@ -309,7 +316,12 @@ const AddArticle = () => {
                                     ]?.remise_finale ||
                                     row.original.remise_finale ||
                                     "",
-                                prix_net: data.prix_net,
+                                prix_net:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.prix_net ||
+                                    row.original.prix_net ||
+                                    "",
                             }
                         );
                     };
@@ -942,6 +954,7 @@ const AddArticle = () => {
                 </div>
 
                 <GenericTable
+                    dataId={[]}
                     filters={filters}
                     handleFilterChange={handleFilterChange}
                     isLoading={isLoading}
