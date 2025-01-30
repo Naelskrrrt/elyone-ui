@@ -110,6 +110,7 @@ export function ArticleHistoryDialog({
                 </DrawerHeader>
                 {/* <div className="w-full"> */}
                 <GenericTable
+                    dataId={[]}
                     isLoading={isLoading}
                     handleFilterChange={() => {}}
                     columns={columns}

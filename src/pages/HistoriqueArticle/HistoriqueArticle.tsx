@@ -233,6 +233,7 @@ const AddArticle = () => {
                 </div>
 
                 <GenericTable
+                    dataId={[]}
                     filters={filters}
                     handleFilterChange={handleFilterChange}
                     isLoading={isLoading}

@@ -1,9 +1,5 @@
 import { apiPannier } from "@/infra/ApiClient";
-import {
-    ArticleSendType,
-    FetchCommandesResponse,
-    SendArticleToHubspot,
-} from "@/types/Article";
+import { FetchCommandesResponse, SendArticleToHubspot } from "@/types/Article";
 import axios from "axios";
 
 export const fetchCommandes = async (params: {
