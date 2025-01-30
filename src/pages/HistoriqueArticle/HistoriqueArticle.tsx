@@ -22,6 +22,7 @@ import { Toaster } from "sonner";
 import dayjs from "dayjs";
 import "dayjs/locale/fr"; // Charger la locale française
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import { formatNumber } from "@/lib/formatNumber";
 
 const AddArticle = () => {
     const [articlePerPage, setArticlePerPage] = useState(25);
@@ -64,7 +65,7 @@ const AddArticle = () => {
         ct_num: params?.ct_num || "EXAMPLE",
         filter: filters,
         search: search,
-        page: currentPage + 1, // La pagination dans React Query est souvent 1-indexée
+        page: currentPage + 1,
         per_page: articlePerPage,
         sqlOrder: sortState,
         hubspot_id: params?.hubspot_id || "",
@@ -172,8 +173,9 @@ const AddArticle = () => {
                 accessorKey: "prix_achat",
                 header: "Prix Unit.",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
             },
             {
                 // 6

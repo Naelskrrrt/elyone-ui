@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { useUrlParams } from "@/context/UrlParamsContext";
 import { useArticles } from "@/hooks/useArticles";
 import { usePannier } from "@/hooks/usePannier";
+import { formatNumber } from "@/lib/formatNumber";
 import { Article, Commandes } from "@/types/Article";
 import { DragEndEvent, UniqueIdentifier } from "@dnd-kit/core";
 import { arrayMove, useSortable } from "@dnd-kit/sortable";
@@ -38,35 +39,40 @@ import { jwtDecode } from "jwt-decode";
 import { Link } from "react-router";
 import { toast, Toaster } from "sonner";
 
+interface SendConfirmState {
+    isSyncErp: boolean;
+    isClearCart: boolean;
+}
+
+interface UserData {
+    email: string;
+    // Ajouter d'autres propriétés au besoin
+}
+
 const HomePage = () => {
     const [hideKeys, setHideKeys] = useState<string[]>([
         "code_famille",
         "prix_ttc",
         "AR_StockTerme",
         "prix_vente",
-    ]); // Gérer dynamiquement les colonnes masquées
+    ]);
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
     const [totalRemise, setTotalRemise] = useState<number>(0);
     const [totalHorsTaxe, settotalHorsTaxe] = useState<number>(0);
-    const [sendConfirm, setSendConfirm] = useState<any>({
+    const [sendConfirm, setSendConfirm] = useState<SendConfirmState>({
         isSyncErp: false,
         isClearCart: false,
     });
 
-    const [user, setUser] = useLocalStorage<any>("user", null);
-
+    const [user, setUser] = useLocalStorage<UserData>("user", { email: "" });
     useEffect(() => {
         const token = window.localStorage.getItem("access");
         const user = jwtDecode<any>(token as string);
         setUser(user);
     }, []);
 
-    const {
-        data: commande,
-        isLoading,
-        refetch,
-    } = usePannier({
+    const { data: commande, isLoading } = usePannier({
         uuid: user?.email as string,
     });
 
@@ -99,29 +105,29 @@ const HomePage = () => {
         [commandeState]
     );
 
-    const handleDragEnd = useCallback((event: DragEndEvent) => {
-        const { active, over } = event;
-        if (!active || !over || active.id === over.id) return;
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+            if (!active || !over || active.id === over.id || !commandeState)
+                return;
 
-        console.log("Dragged ID:", active.id, "Over ID:", over.id);
-
-        setCommande((prevCommande) => {
-            if (!prevCommande) return null;
-
-            const oldIndex = prevCommande.findIndex(
-                (item) => String(item.id) === String(active.id)
+            const oldIndex = commandeState.findIndex(
+                (item) => String(item.id) === active.id
             );
-            const newIndex = prevCommande.findIndex(
-                (item) => String(item.id) === String(over.id)
+            const newIndex = commandeState.findIndex(
+                (item) => String(item.id) === over.id
             );
 
-            if (oldIndex === -1 || newIndex === -1) return prevCommande;
+            if (oldIndex === -1 || newIndex === -1) return;
 
-            return arrayMove(prevCommande, oldIndex, newIndex);
-        });
-    }, []);
+            // Création d'un nouveau tableau pour éviter les mutations directes
+            const newItems = arrayMove(commandeState, oldIndex, newIndex);
+            setCommande(newItems);
+        },
+        [commandeState] // Dépendance explicite
+    );
 
-    // console.log(commandeState);
+    console.log(commandeState);
 
     const handleSendHubspot = () => {
         if (!commandeState) return;
@@ -137,37 +143,32 @@ const HomePage = () => {
         console.log("Commande formatée :", formattedCommande);
         mutation.mutate({
             articles: formattedCommande,
-            hubspot_id: "8021036",
-            transaction_id: "29895783826",
+            hubspot_id: params?.hubspot_id as string,
+            transaction_id: params?.deal_id as string,
             sync_erp: sendConfirm.isSyncErp ? "OUI" : "",
             clear_cart: sendConfirm.isClearCart,
         });
         // return formattedCommande;
     };
 
-    const updateRowData = (rowId: number, rowData: Partial<Commandes>) => {
-        setCommande((prev) => {
-            if (!prev) return null;
+    const updateRowData = useCallback(
+        (rowId: number, rowData: Partial<Commandes>) => {
+            setCommande((prev) => {
+                if (!prev) return null;
 
-            const updatedCommande = prev.map((item) =>
-                item.id === rowId
-                    ? ({ ...item, ...rowData } as Commandes)
-                    : item
+                return prev.map((item) =>
+                    item.id === rowId ? { ...item, ...rowData } : item
+                );
+            });
+
+            // Déclencher la mise à jour API de façon différée
+            setTimeout(
+                () => updateSingleArticle({ id: rowId, ...rowData }),
+                300
             );
-
-            // Trouver l'article mis à jour
-            const updatedArticle = updatedCommande.find(
-                (item) => item.id === rowId
-            );
-
-            // Envoyer la mise à jour à l'API
-            if (updatedArticle) {
-                updateSingleArticle(updatedArticle);
-            }
-
-            return updatedCommande;
-        });
-    };
+        },
+        []
+    );
 
     const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
         if (!rowId) {
@@ -175,7 +176,7 @@ const HomePage = () => {
             return null;
         }
 
-        const { attributes, listeners } = useSortable({ id: rowId });
+        const { attributes, listeners } = useSortable({ id: rowId.toString() });
 
         return (
             <button {...attributes} {...listeners}>
@@ -184,18 +185,19 @@ const HomePage = () => {
         );
     };
 
-    const handleDeleteRow = (articleId: number[], uuid: string) => {
+    const handleDeleteRow = async (articleId: number[], uuid: string) => {
         if (!uuid) return;
 
         try {
-            const response = deleteCommandes(articleId.join(","), uuid);
-            console.log(response);
+            const response = await deleteCommandes(articleId.join(","), uuid);
+            if (response.status !== 200)
+                throw new Error("Erreur de suppression");
             toast.success("Article supprimé !");
             queryClient.invalidateQueries({ queryKey: ["pannier"] });
-        } catch (error: any) {
-            console.error("Erreur lors de la suppression de l'article", error);
+        } catch (error) {
+            toast.error("Échec de la suppression");
+            console.error("Erreur détaillée:", error);
         }
-        refetch();
     };
 
     const updateSingleArticle = async (article: Commandes) => {
@@ -228,30 +230,32 @@ const HomePage = () => {
     };
 
     useEffect(() => {
-        const totalPrixNet = (commandeState || []).reduce(
-            (sum, article) =>
-                sum + parseFloat((article.total_ht_net as string) || "0"),
-            0
-        );
+        const calculateTotals = () => {
+            if (!commandeState) return;
 
-        const totalRemise = (commandeState || []).reduce(
-            (sum, article) =>
-                sum + parseFloat((article.remise_finale as string) || "0"),
-            0
-        );
+            const totals = commandeState.reduce(
+                (acc, article) => ({
+                    prixNet:
+                        acc.prixNet +
+                        parseFloat((article.total_ht_net as string) || "0"),
+                    remise:
+                        acc.remise + parseFloat(article.remise_finale || "0"),
+                    horsTaxe:
+                        acc.horsTaxe +
+                        parseFloat(article.prix_final || "0") *
+                            parseInt(article.quantite || "1", 10),
+                }),
+                { prixNet: 0, remise: 0, horsTaxe: 0 }
+            );
 
-        const totalHorsTaxe = (commandeState || []).reduce(
-            (sum, articles) =>
-                sum +
-                parseFloat(articles.prix_final || "0") *
-                    parseFloat(articles.quantite || "1"),
-            0
-        );
-        console.log(totalPrixNet);
-        setTotalPrixNet(totalPrixNet);
-        setTotalRemise(totalRemise);
-        settotalHorsTaxe(totalHorsTaxe);
-    }, [updateRowData, commandeState]);
+            setTotalPrixNet(totals.prixNet);
+            setTotalRemise(totals.remise);
+            settotalHorsTaxe(totals.horsTaxe);
+        };
+
+        calculateTotals();
+    }, [commandeState]);
+
     const handleRefresh = () => {
         // updateCommandeOnServer();
         queryClient.invalidateQueries({ queryKey: ["pannier"] });
@@ -265,7 +269,7 @@ const HomePage = () => {
             queryClient.invalidateQueries({ queryKey: ["articles"] });
             const articleIds = commandeState?.map((item) => item.id) || [];
             // TODO: Vider le panier dans le backend
-            handleDeleteRow(articleIds, user.email);
+            handleDeleteRow(articleIds, user.email as string);
             setIsConfirmDialogOpen(false);
         },
         onError: (error: AxiosError) => {
@@ -370,8 +374,9 @@ const HomePage = () => {
                 accessorKey: "prix_ttc",
                 header: "Prix TTC",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
             },
             {
                 // 5
@@ -379,8 +384,9 @@ const HomePage = () => {
                 accessorKey: "prix_vente",
                 header: "Prix Vente HT",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
                 size: 160,
             },
 
@@ -390,7 +396,9 @@ const HomePage = () => {
                 accessorKey: "AR_StockTerme",
                 header: "Stock à Terme",
                 cell: (info) =>
-                    parseFloat(info.getValue() as string).toFixed(2),
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ),
             },
             {
                 // Quantité
@@ -645,8 +653,9 @@ const HomePage = () => {
                 header: "Prix U Remisé",
                 cell: ({ row }) => {
                     return (
-                        parseFloat(row.original.prix_net || "0").toFixed(2) +
-                        " €"
+                        formatNumber(
+                            parseFloat(row.original.prix_net || "0").toFixed(2)
+                        ) + " €"
                     );
                 },
 
@@ -661,7 +670,7 @@ const HomePage = () => {
                     const prixNet = parseFloat(row.original.prix_net || "0");
                     const quantite = parseInt(row.original.quantite || "1");
 
-                    return (prixNet * quantite).toFixed(2) + " €";
+                    return formatNumber((prixNet * quantite).toFixed(2)) + " €";
                 },
             },
 
@@ -688,15 +697,7 @@ const HomePage = () => {
                 size: 100,
             },
         ],
-        [
-            updateRowData,
-            commandeState,
-            totalPrixNet,
-            totalRemise,
-            totalHorsTaxe,
-            sendConfirm,
-            dataIds,
-        ]
+        [updateRowData, hideKeys]
     );
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -951,7 +952,7 @@ const HomePage = () => {
                                 Total HT
                             </h1>
                             <h1 className="text-nextblue-500 font-bold text-xl">
-                                {totalHorsTaxe} €
+                                {formatNumber(totalHorsTaxe)} €
                             </h1>
                         </div>
                         <div className="bg-slate-100 w-1/5  min-w-[200px] h-fit py-2 px-3 rounded-md">
@@ -967,7 +968,7 @@ const HomePage = () => {
                                 Total HT Net
                             </h1>
                             <h1 className="text-nextblue-500 font-bold text-xl">
-                                {totalPrixNet.toFixed(2)} €
+                                {formatNumber(totalPrixNet.toFixed(2))} €
                             </h1>
                         </div>
                         <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
@@ -975,7 +976,8 @@ const HomePage = () => {
                                 Total TTC 20%
                             </h1>
                             <h1 className="text-nextblue-500 font-bold text-xl">
-                                {(totalPrixNet * 1.2).toFixed(2)} €
+                                {formatNumber((totalPrixNet * 1.2).toFixed(2))}{" "}
+                                €
                             </h1>
                         </div>
                     </div>

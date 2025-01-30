@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/fr"; // Charger la locale française
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { useMemo, useState } from "react";
+import { formatNumber } from "@/lib/formatNumber";
 
 export function ArticleHistoryDialog({
     reference,
@@ -67,7 +68,9 @@ export function ArticleHistoryDialog({
                 accessorKey: "prix_achat",
                 header: "Prix Achat",
                 cell: (info) =>
-                    parseFloat(info.getValue() as string).toFixed(2) + " €",
+                    formatNumber(
+                        parseFloat(info.getValue() as string).toFixed(2)
+                    ) + " €",
                 size: 200,
             },
             {
@@ -75,7 +78,9 @@ export function ArticleHistoryDialog({
                 accessorKey: "remise",
                 header: "Remise",
                 cell: (info) =>
-                    parseFloat(info.getValue() as string).toFixed(2) + " %",
+                    formatNumber(
+                        parseFloat(info.getValue() as string).toFixed(2)
+                    ) + " %",
                 size: 200,
             },
         ],

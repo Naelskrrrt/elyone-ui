@@ -131,6 +131,7 @@ export interface FetchCommandesResponse {
     articles: Commandes[];
     total: number;
     empty_columns: { [key: string]: string };
+    status: string | number;
 }
 
 export interface FetchArticlesHistoryResponse {

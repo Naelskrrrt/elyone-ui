@@ -21,6 +21,9 @@ export default {
                 display: ["DM Serif Display", "serif"],
             },
             colors: {
+                hubspot: {
+                    500: "#FF5C35",
+                },
                 nextblue: {
                     50: "#e6f1fe",
                     100: "#cce3fd",

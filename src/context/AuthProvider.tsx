@@ -91,6 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // setEmail("");
             setIsAuthenticated(false);
             TokenService.removeTokens();
+            window.localStorage.clear();
             queryClient.clear();
         },
 

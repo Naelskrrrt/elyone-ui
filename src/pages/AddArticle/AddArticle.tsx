@@ -36,6 +36,7 @@ import { AxiosError } from "axios";
 import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
 import { Link, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatNumber } from "@/lib/formatNumber";
 
 // type Checked = DropdownMenuCheckboxItemProps["checked"];
 
@@ -400,8 +401,9 @@ const AddArticle = () => {
                 accessorKey: "prix_ttc",
                 header: "Prix TTC",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
             },
             {
                 // 5
@@ -409,8 +411,9 @@ const AddArticle = () => {
                 accessorKey: "prix_vente",
                 header: "Prix Vente HT",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
                 size: 160,
             },
 
@@ -420,8 +423,9 @@ const AddArticle = () => {
                 accessorKey: "prix_achat1",
                 header: "Prix Achat (€)",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
             },
             {
                 // 7
@@ -430,8 +434,9 @@ const AddArticle = () => {
                 accessorKey: "dernier_prix_achat",
                 header: "Dernier Prix Achat (€)",
                 cell: (info) =>
-                    parseFloat(info.getValue<string>() || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ) + " €",
             },
             {
                 // 8
@@ -462,7 +467,9 @@ const AddArticle = () => {
                 accessorKey: "AR_StockTerme",
                 header: "Stock à Terme",
                 cell: (info) =>
-                    parseFloat(info.getValue() as string).toFixed(2),
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ),
             },
             {
                 // 12
@@ -586,8 +593,9 @@ const AddArticle = () => {
                 accessorKey: "prix_cat",
                 header: "Prix Catégorie",
                 cell: ({ row }) =>
-                    parseFloat(row.original.prix_vente || "0").toFixed(2) +
-                    " €",
+                    formatNumber(
+                        parseFloat(row.original.prix_vente || "0").toFixed(2)
+                    ) + " €",
                 size: 170,
             },
             {
@@ -700,9 +708,11 @@ const AddArticle = () => {
                         );
                     return (
                         <span>
-                            {parseFloat(
-                                row.original.remise_finale as string
-                            ).toFixed(2) || 0}
+                            {formatNumber(
+                                parseFloat(
+                                    row.original.remise_finale as string
+                                ).toFixed(2)
+                            ) || 0}
                         </span>
                     );
                 },
@@ -812,9 +822,11 @@ const AddArticle = () => {
                         );
                     return (
                         <span>
-                            {parseFloat(
-                                row.original.prix_final as string
-                            ).toFixed(2) || 0}
+                            {formatNumber(
+                                parseFloat(
+                                    row.original.prix_final as string
+                                ).toFixed(2)
+                            ) || 0}
                         </span>
                     );
                 },
@@ -831,15 +843,19 @@ const AddArticle = () => {
                         updatedRows[row.original.reference_article as string]
                             ?.prix_net
                     )
-                        return (
-                            updatedRows[
-                                row.original.reference_article as string
-                            ]?.prix_net + " €"
+                        return formatNumber(
+                            parseFloat(
+                                updatedRows[
+                                    row.original.reference_article as string
+                                ]?.prix_net + " €"
+                            ).toFixed(2)
                         );
                     return (
-                        parseFloat(
-                            (row.original.prix_net as string) || "0"
-                        ).toFixed(2) + " €"
+                        formatNumber(
+                            parseFloat(
+                                (row.original.prix_net as string) || "0"
+                            ).toFixed(2)
+                        ) + " €"
                     );
                 },
 

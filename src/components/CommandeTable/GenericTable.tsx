@@ -113,7 +113,7 @@ export default function GenericTable({
         // onColumnVisibilityChange: setColumnVisibility,
         columnResizeMode: "onChange",
         getCoreRowModel: getCoreRowModel(),
-        getRowId: (row) => row.id,
+        getRowId: (row) => String(row.id),
     });
 
     // reorder rows after drag & drop
@@ -382,7 +382,7 @@ function TableBody({
                 table.getRowModel().rows.length !== 0 ? (
                     dataIds ? (
                         <SortableContext
-                            key={dataIds.join("-")}
+                            key={dataIds.join("-") + Date.now()}
                             items={dataIds}
                             strategy={verticalListSortingStrategy}
                         >
