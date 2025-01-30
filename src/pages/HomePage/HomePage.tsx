@@ -192,15 +192,14 @@ const HomePage = () => {
     const handleDeleteRow = async (articleId: number[], uuid: string) => {
         if (!uuid) return;
 
-        try {
-            const response = await deleteCommandes(articleId.join(","), uuid);
-            console.log(response);
-            toast.success("Article supprimé !");
-            queryClient.invalidateQueries({ queryKey: ["pannier"] });
-        } catch (error) {
+        const response = await deleteCommandes(articleId.join(","), uuid);
+        toast.success("Article supprimé !");
+        queryClient.invalidateQueries({ queryKey: ["pannier"] });
+        console.log(response);
+        if (response.success == false) {
             toast.error("Échec de la suppression");
-            console.error("Erreur détaillée:", error);
         }
+        return response;
     };
 
     const updateSingleArticle = async (article: Commandes) => {
