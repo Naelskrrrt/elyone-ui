@@ -87,7 +87,7 @@ export const UrlParamsProvider: React.FC<{ children: React.ReactNode }> = ({
         <UrlParamsContext.Provider value={{ params, setParams }}>
             {/* Dialogue d'avertissement */}
             <Dialog open={missingParams.length > 0}>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px] backdrop:blur-md">
                     <DialogHeader>
                         <DialogTitle>Paramètres manquants</DialogTitle>
                         <DialogDescription>

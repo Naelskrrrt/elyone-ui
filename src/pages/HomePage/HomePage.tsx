@@ -51,11 +51,31 @@ interface UserData {
 }
 
 const HomePage = () => {
-    const [hideKeys, setHideKeys] = useState<string[]>([
-        "code_famille",
+    const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeys", [
+        "mise_en_sommeil",
         "prix_ttc",
+        "prix_achat1",
+        "dernier_prix_achat",
+        "Qtecommandeclient",
+        "QtecommandeAchat",
         "AR_StockTerme",
-        "prix_vente",
+        "catalogue1_intitule",
+        "catalogue2_intitule",
+        "catalogue3_intitule",
+        "catalogue4_intitule",
+        "marque_commerciale",
+        "objectif_qtes_vendues",
+        "pourcentage_or",
+        "premiere_commercialisation",
+        "AR_InterdireCommande",
+        "AR_Exclure",
+        "dossier_hs",
+        "equivalent_75",
+        "ref_bis",
+        "remise_client",
+        "prix_vente_client",
+        "remise_categorie",
+        "remise_famille",
     ]);
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
@@ -236,17 +256,25 @@ const HomePage = () => {
             if (!commandeState) return;
 
             const totals = commandeState.reduce(
-                (acc, article) => ({
-                    prixNet:
-                        acc.prixNet +
-                        parseFloat((article.total_ht_net as string) || "0"),
-                    remise:
-                        acc.remise + parseFloat(article.remise_finale || "0"),
-                    horsTaxe:
-                        acc.horsTaxe +
-                        parseFloat(article.prix_final || "0") *
-                            parseInt(article.quantite || "1", 10),
-                }),
+                (acc, article) => {
+                    const prixUnitaireNet =
+                        parseFloat(article.total_ht_net as string) || 0;
+                    const quantite = parseInt(article.quantite || "1", 10);
+                    const prixFinalUnitaire = parseFloat(
+                        article.prix_final || "0"
+                    );
+
+                    // Calcul de la remise en euros pour cet article
+                    const remiseEuro =
+                        prixUnitaireNet * quantite -
+                        prixFinalUnitaire * quantite;
+
+                    return {
+                        prixNet: acc.prixNet + prixUnitaireNet,
+                        horsTaxe: acc.horsTaxe + prixFinalUnitaire * quantite,
+                        remise: acc.remise + remiseEuro,
+                    };
+                },
                 { prixNet: 0, remise: 0, horsTaxe: 0 }
             );
 
@@ -359,7 +387,7 @@ const HomePage = () => {
                         </div>
                     );
                 },
-                size: 350,
+                size: 250,
             },
             {
                 // 2
@@ -962,7 +990,7 @@ const HomePage = () => {
                                 Total Remise
                             </h1>
                             <h1 className="text-nextblue-500 font-bold text-xl">
-                                {totalRemise} %
+                                {formatNumber(totalRemise)} €
                             </h1>
                         </div>
                         <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">

@@ -48,13 +48,11 @@ const AddArticle = () => {
         Record<string, boolean>
     >("checkedRows", {});
     // const [order, setOrder] = useState<Record<string, string>>({});
-    const [hideKeys, setHideKeys] = useState<string[]>([
+    const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeys", [
         "mise_en_sommeil",
         "prix_ttc",
-        // "prix_vente",
         "prix_achat1",
         "dernier_prix_achat",
-        // "stock",
         "Qtecommandeclient",
         "QtecommandeAchat",
         "AR_StockTerme",
@@ -74,13 +72,8 @@ const AddArticle = () => {
         "remise_client",
         "prix_vente_client",
         "remise_categorie",
-        // "prix_vente",
         "remise_famille",
-        // "remise_finale",
-        // "prix_final",
-        // "prix_net",
-        // "actions",
-    ]); // Gérer dynamiquement les colonnes masquées
+    ]);
 
     const { params } = useUrlParams();
     const [showFilters, setShowFilters] = useState<Boolean>(false);
@@ -541,7 +534,10 @@ const AddArticle = () => {
                 id: "pourcentage_or",
                 accessorKey: "pourcentage_or",
                 header: "Pourcentage OR",
-                cell: (info) => info.getValue(),
+                cell: (info) =>
+                    formatNumber(
+                        parseFloat(info.getValue<string>() || "0").toFixed(2)
+                    ),
             },
 
             {
