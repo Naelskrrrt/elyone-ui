@@ -79,7 +79,7 @@ const HomePage = () => {
     ]);
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
-    const [totalRemise, setTotalRemise] = useState<number>(0);
+    // const [totalRemise, setTotalRemise] = useState<number>(0);
     const [totalHorsTaxe, settotalHorsTaxe] = useState<number>(0);
     const [sendConfirm, setSendConfirm] = useState<SendConfirmState>({
         isSyncErp: false,
@@ -269,6 +269,8 @@ const HomePage = () => {
                         prixUnitaireNet * quantite -
                         prixFinalUnitaire * quantite;
 
+                    console.log(remiseEuro);
+
                     return {
                         prixNet: acc.prixNet + prixUnitaireNet,
                         horsTaxe: acc.horsTaxe + prixFinalUnitaire * quantite,
@@ -279,7 +281,7 @@ const HomePage = () => {
             );
 
             setTotalPrixNet(totals.prixNet);
-            setTotalRemise(totals.remise);
+            // setTotalRemise(totals.remise);
             settotalHorsTaxe(totals.horsTaxe);
         };
 
@@ -990,7 +992,7 @@ const HomePage = () => {
                                 Total Remise
                             </h1>
                             <h1 className="text-nextblue-500 font-bold text-xl">
-                                {formatNumber(totalRemise)} €
+                                {formatNumber(totalHorsTaxe - totalPrixNet)} €
                             </h1>
                         </div>
                         <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
