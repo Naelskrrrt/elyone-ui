@@ -122,7 +122,7 @@ const SignIn = () => {
                     </div>
                 </div>
             </div>
-            <Article />
+            {/* <Article /> */}
             <Toaster position="top-right" closeButton richColors />
         </div>
     );
@@ -130,31 +130,31 @@ const SignIn = () => {
 
 export default SignIn;
 
-import React, { useEffect, useState } from "react";
-import decryptAES256CBC from "@/lib/decriptParams";
+// import React, { useEffect, useState } from "react";
+// import decryptAES256CBC from "@/lib/decriptParams";
 
-const Article: React.FC = () => {
-    const [decryptedData, setDecryptedData] = useState<string | null>(null);
+// const Article: React.FC = () => {
+//     const [decryptedData, setDecryptedData] = useState<string | null>(null);
 
-    useEffect(() => {
-        // Données simulées (remplacez par vos propres données)
-        const key = "ELYONE_2025_SECURE_KEY";
-        const ivBase64 = "gdCaiHi8mlY6DiUTw+YBNw=="; // Exemple d'IV en base64
-        const encryptedData = "+hkywAO0rZe+UWyKe2Wwgg=="; // Exemple de donnée chiffrée en base64
+//     useEffect(() => {
+//         // Données simulées (remplacez par vos propres données)
+//         const key = "ELYONE_2025_SECURE_KEY";
+//         const ivBase64 = "gdCaiHi8mlY6DiUTw+YBNw=="; // Exemple d'IV en base64
+//         const encryptedData = "+hkywAO0rZe+UWyKe2Wwgg=="; // Exemple de donnée chiffrée en base64
 
-        // Déchiffrement
-        const data = decryptAES256CBC(encryptedData, key, ivBase64);
-        setDecryptedData(data);
-    }, []);
+//         // Déchiffrement
+//         const data = decryptAES256CBC(encryptedData, key, ivBase64);
+//         setDecryptedData(data);
+//     }, []);
 
-    return (
-        <div>
-            <h1>Donnée déchiffrée :</h1>
-            {decryptedData ? (
-                <p>{decryptedData}</p>
-            ) : (
-                <p>Le déchiffrement a échoué ou aucune donnée à afficher.</p>
-            )}
-        </div>
-    );
-};
+//     return (
+//         <div>
+//             <h1>Donnée déchiffrée :</h1>
+//             {decryptedData ? (
+//                 <p>{decryptedData}</p>
+//             ) : (
+//                 <p>Le déchiffrement a échoué ou aucune donnée à afficher.</p>
+//             )}
+//         </div>
+//     );
+// };
