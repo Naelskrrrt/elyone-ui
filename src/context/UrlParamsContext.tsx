@@ -8,14 +8,14 @@ import {
 } from "@/components/ui/dialog";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 
 interface UrlParams {
     ct_num: string;
     deal_id: string;
     hubspot_id: string;
     owner_email: string;
-    uuid: string;
+    // iv: string;
 }
 
 interface UrlParamsContextProps {
@@ -45,6 +45,7 @@ export const UrlParamsProvider: React.FC<{ children: React.ReactNode }> = ({
                 { key: "id_erp", name: "ID ERP" },
                 { key: "deal_id", name: "ID Deal" },
                 { key: "hubspot_id", name: "ID Hubspot" },
+                // { key: "iv", name: "IV" },
                 // { key: "owner_email", name: "Email propriétaire" },
             ];
 
@@ -72,14 +73,14 @@ export const UrlParamsProvider: React.FC<{ children: React.ReactNode }> = ({
             const deal_id = searchParams.get("deal_id") || "";
             const hubspot_id = searchParams.get("hubspot_id") || "";
             const owner_email = searchParams.get("owner_email") || "";
-            const uuid = uuidv4();
+            // const iv = searchParams.get("iv") || "";
 
             setParams({
                 ct_num,
                 deal_id,
                 hubspot_id,
                 owner_email,
-                uuid,
+                // iv,
             });
         }
     }, [params, setParams, missingParams]);

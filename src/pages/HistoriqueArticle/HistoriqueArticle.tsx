@@ -189,7 +189,7 @@ const AddArticle = () => {
                 // 7
                 id: "prix_remise",
                 accessorKey: "prix_remise",
-                header: "Prix Rémisé",
+                header: "Prix Remisé",
                 cell: (info) => parseInt(info.getValue<string>() || "0") + " €",
                 size: 160,
             },

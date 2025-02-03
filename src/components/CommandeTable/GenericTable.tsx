@@ -423,14 +423,14 @@ function TableBody({
                 ) : (
                     <div className="w-full h-full relative py-16 flex items-center justify-center">
                         <h1 className="text-2xl font-semibold text-slate-500 text-wrap">
-                            Aucun Donnée
+                            Aucune Donnée
                         </h1>
                     </div>
                 )
             ) : (
                 <div className="w-full h-full relative flex py-16 items-center justify-center">
                     <h1 className="text-2xl font-medium text-slate-500 text-wrap">
-                        Aucun Donnée
+                        Aucune Donnée
                     </h1>
                 </div>
             )}

@@ -404,7 +404,7 @@ const HomePage = () => {
                 // 4
                 id: "prix_ttc",
                 accessorKey: "prix_ttc",
-                header: "Prix TTC",
+                header: "PV TTC",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -414,7 +414,7 @@ const HomePage = () => {
                 // 5
                 id: "prix_vente",
                 accessorKey: "prix_vente",
-                header: "Prix Vente HT",
+                header: "PV HT",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -682,7 +682,7 @@ const HomePage = () => {
                 // 32
                 id: "prix_net",
                 accessorKey: "prix_net",
-                header: "Prix U Remisé",
+                header: "PU Remisé",
                 cell: ({ row }) => {
                     return (
                         formatNumber(

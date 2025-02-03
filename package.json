@@ -28,6 +28,7 @@
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "framer-motion": "^11.18.0",
@@ -51,6 +52,7 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@iconify/react": "^5.2.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^22.10.7",
     "@types/react": "^18.3.18",

@@ -29,14 +29,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatNumber } from "@/lib/formatNumber";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import { AxiosError } from "axios";
-import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
 import { Link, useNavigate } from "react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { formatNumber } from "@/lib/formatNumber";
+import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
 
 // type Checked = DropdownMenuCheckboxItemProps["checked"];
 
@@ -390,7 +389,7 @@ const AddArticle = () => {
                 // 4
                 id: "prix_ttc",
                 accessorKey: "prix_ttc",
-                header: "Prix TTC",
+                header: "PV TTC",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -400,7 +399,7 @@ const AddArticle = () => {
                 // 5
                 id: "prix_vente",
                 accessorKey: "prix_vente",
-                header: "Prix Vente HT",
+                header: "PV HT",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
