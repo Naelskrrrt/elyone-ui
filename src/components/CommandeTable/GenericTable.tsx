@@ -1,4 +1,4 @@
-import React, { CSSProperties } from "react";
+import React, { CSSProperties, useEffect } from "react";
 
 import "./index.css";
 
@@ -8,11 +8,13 @@ import {
     type DragEndEvent,
     KeyboardSensor,
     MouseSensor,
+    PointerSensor,
     TouchSensor,
     type UniqueIdentifier,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
+
 import {
     ColumnDef,
     flexRender,
@@ -22,18 +24,24 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+    restrictToHorizontalAxis,
+    restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 
 import {
+    arrayMove,
+    horizontalListSortingStrategy,
     SortableContext,
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
+import { Article, Commandes } from "@/types/Article";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useLocalStorage } from "@uidotdev/usehooks";
 import Loader from "../loader/loader";
 import { Input } from "../ui/input";
-import { Article, Commandes } from "@/types/Article";
 
 const DraggableRow = ({
     row,
@@ -84,6 +92,8 @@ export default function GenericTable({
     handleSort,
     sortState,
     isSortable,
+    isColumnDraggable = false,
+    storageKey = "defaultColumnOrder",
 }: // columnVisibility,
 // setColumnVisibility,
 {
@@ -99,18 +109,126 @@ export default function GenericTable({
     handleSort: (columnId: string) => void;
     sortState?: { index?: number | string; value: "ASC" | "DESC" };
     isSortable?: boolean;
+    isColumnDraggable?: boolean;
+    storageKey?: string;
     // columnVisibility: any;
     // setColumnVisibility: any;
 }) {
+    // Draggable Column Header:
+
+    const DraggableColumnHeader = ({
+        header,
+        hideKeys,
+    }: {
+        header: any;
+        hideKeys?: string[];
+    }) => {
+        const { attributes, listeners, setNodeRef, transform, isDragging } =
+            useSortable({
+                id: header.column.id,
+            });
+
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition: "width 0.2s",
+            opacity: isDragging ? 0.5 : 1,
+            zIndex: isDragging ? 1 : 0,
+            width: `calc(var(--header-${header.id}-size) * 1px)`,
+        };
+
+        if (hideKeys?.includes(header.column.id)) return null;
+
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                className="th relative group"
+                {...attributes}
+                {...listeners}
+            >
+                <div className="flex flex-col gap-1 items-start pr-2">
+                    <h1
+                        className={
+                            header.column.columnDef.enableSorting
+                                ? "cursor-pointer"
+                                : ""
+                        }
+                        onClick={() => {
+                            if (header.column.columnDef.enableSorting) {
+                                handleSort(header.column.id);
+                            }
+                        }}
+                    >
+                        {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                        )}
+                        {sortState?.index === header.column.id && (
+                            <span>
+                                {sortState?.value === "ASC" ? " 🔼" : " 🔽"}
+                            </span>
+                        )}
+                    </h1>
+                </div>
+                <div
+                    onDoubleClick={() => header.column.resetSize()}
+                    // onMouseDown={header.getResizeHandler()}
+                    // onTouchStart={header.getResizeHandler()}
+                    // className={`resizer  ${
+                    //     header.column.getIsResizing() ? "isResizing" : ""
+                    // }`}
+                />
+            </div>
+        );
+    };
+
+    const columnSensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 3,
+            },
+        }),
+        useSensor(KeyboardSensor)
+    );
+
+    const handleColumnDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = columnOrder.indexOf(active.id as string);
+        const newIndex = columnOrder.indexOf(over.id as string);
+
+        setColumnOrder(arrayMove(columnOrder, oldIndex, newIndex));
+    };
+
+    const [columnOrder, setColumnOrder] = useLocalStorage<string[]>(
+        storageKey,
+        columns.map((col) => col.id as string)
+    );
+
+    // Synchroniser si les colonnes changent
+    useEffect(() => {
+        if (isColumnDraggable) {
+            const currentIds = columns.map((c) => c.id as string);
+            const filteredOrder = columnOrder.filter((id: string) =>
+                currentIds.includes(id)
+            );
+            const newIds = currentIds.filter((id) => !columnOrder.includes(id));
+
+            setColumnOrder([...filteredOrder, ...newIds]);
+        }
+    }, [columns]);
+
     const table = useReactTable({
         data,
         columns,
-
+        state: {
+            columnOrder,
+        },
         defaultColumn: {
             minSize: 50,
             maxSize: 800,
         },
-        // onColumnVisibilityChange: setColumnVisibility,
         columnResizeMode: "onChange",
         getCoreRowModel: getCoreRowModel(),
         getRowId: (row) => String(row.id),
@@ -118,7 +236,7 @@ export default function GenericTable({
 
     // reorder rows after drag & drop
 
-    const sensors = useSensors(
+    const rowSensors = useSensors(
         useSensor(MouseSensor, {}),
         useSensor(TouchSensor, {}),
         useSensor(KeyboardSensor, {})
@@ -149,10 +267,9 @@ export default function GenericTable({
 
     return (
         <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
+            sensors={columnSensors}
+            modifiers={[restrictToHorizontalAxis]}
+            onDragEnd={handleColumnDragEnd}
         >
             {/* <div className="h-4" />({data.length} rows) */}
             <div className="flex flex-col w-full relative h-full gap-2 overflow-x-auto py-1 ">
@@ -181,87 +298,109 @@ export default function GenericTable({
                                     className: "tr",
                                 }}
                             >
-                                {headerGroup.headers.map((header, i) => {
-                                    if (
-                                        hideKeys?.includes(header.id) ||
-                                        header.id == "id"
-                                    ) {
-                                        return null;
-                                    }
+                                <SortableContext
+                                    items={columnOrder}
+                                    strategy={horizontalListSortingStrategy}
+                                >
+                                    {isColumnDraggable
+                                        ? headerGroup.headers.map((header) => (
+                                              <DraggableColumnHeader
+                                                  key={header.id}
+                                                  header={header}
+                                                  hideKeys={hideKeys}
+                                              />
+                                          ))
+                                        : headerGroup.headers.map(
+                                              (header, i) => {
+                                                  if (
+                                                      hideKeys?.includes(
+                                                          header.id
+                                                      ) ||
+                                                      header.id == "id"
+                                                  ) {
+                                                      return null;
+                                                  }
 
-                                    return (
-                                        <div
-                                            key={header.id}
-                                            className="th"
-                                            style={{
-                                                width: `calc(var(--header-${header.id}-size) * 1px)`,
-                                            }}
-                                        >
-                                            <div className="flex flex-col gap-1 items-start pr-2">
-                                                <h1
-                                                    className={
-                                                        isSortable
-                                                            ? "cursor-pointer"
-                                                            : ""
-                                                    }
-                                                    onClick={() => {
-                                                        if (
-                                                            header.id ===
-                                                                "checkbox" ||
-                                                            header.id ===
-                                                                "actions" ||
-                                                            header.id ===
-                                                                "drag-handle" ||
-                                                            header.id === "id"
-                                                        ) {
-                                                            return;
-                                                        }
+                                                  return (
+                                                      <div
+                                                          key={header.id}
+                                                          className="th"
+                                                          style={{
+                                                              width: `calc(var(--header-${header.id}-size) * 1px)`,
+                                                          }}
+                                                      >
+                                                          <div className="flex flex-col gap-1 items-start pr-2">
+                                                              <h1
+                                                                  className={
+                                                                      isSortable
+                                                                          ? "cursor-pointer"
+                                                                          : ""
+                                                                  }
+                                                                  onClick={() => {
+                                                                      if (
+                                                                          header.id ===
+                                                                              "checkbox" ||
+                                                                          header.id ===
+                                                                              "actions" ||
+                                                                          header.id ===
+                                                                              "drag-handle" ||
+                                                                          header.id ===
+                                                                              "id"
+                                                                      ) {
+                                                                          return;
+                                                                      }
 
-                                                        if (isSortable) {
-                                                            handleSort(
-                                                                (
-                                                                    i - 1
-                                                                ).toString()
-                                                            );
-                                                        }
-                                                    }}
-                                                >
-                                                    {header.isPlaceholder
-                                                        ? null
-                                                        : flexRender(
-                                                              header.column
-                                                                  .columnDef
-                                                                  .header,
-                                                              header.getContext()
-                                                          )}
+                                                                      if (
+                                                                          isSortable
+                                                                      ) {
+                                                                          handleSort(
+                                                                              (
+                                                                                  i -
+                                                                                  1
+                                                                              ).toString()
+                                                                          );
+                                                                      }
+                                                                  }}
+                                                              >
+                                                                  {header.isPlaceholder
+                                                                      ? null
+                                                                      : flexRender(
+                                                                            header
+                                                                                .column
+                                                                                .columnDef
+                                                                                .header,
+                                                                            header.getContext()
+                                                                        )}
 
-                                                    {/* Afficher l'icône du tri */}
-                                                    {sortState?.index ==
-                                                        i - 1 && (
-                                                        <span>
-                                                            {sortState.value ===
-                                                            "ASC"
-                                                                ? " 🔼"
-                                                                : " 🔽"}
-                                                        </span>
-                                                    )}
-                                                </h1>
-                                            </div>
-                                            <div
-                                                onDoubleClick={() =>
-                                                    header.column.resetSize()
-                                                }
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
-                                                className={`resizer ${
-                                                    header.column.getIsResizing()
-                                                        ? "isResizing"
-                                                        : ""
-                                                }`}
-                                            />
-                                        </div>
-                                    );
-                                })}
+                                                                  {/* Afficher l'icône du tri */}
+                                                                  {sortState?.index ==
+                                                                      i - 1 && (
+                                                                      <span>
+                                                                          {sortState.value ===
+                                                                          "ASC"
+                                                                              ? " 🔼"
+                                                                              : " 🔽"}
+                                                                      </span>
+                                                                  )}
+                                                              </h1>
+                                                          </div>
+                                                          <div
+                                                              onDoubleClick={() =>
+                                                                  header.column.resetSize()
+                                                              }
+                                                              onMouseDown={header.getResizeHandler()}
+                                                              onTouchStart={header.getResizeHandler()}
+                                                              className={`resizer ${
+                                                                  header.column.getIsResizing()
+                                                                      ? "isResizing"
+                                                                      : ""
+                                                              }`}
+                                                          />
+                                                      </div>
+                                                  );
+                                              }
+                                          )}
+                                </SortableContext>
                             </div>
                         ))}
                     </div>
@@ -341,17 +480,31 @@ export default function GenericTable({
                         </div>
                     ) : table.getState().columnSizingInfo.isResizingColumn &&
                       enableMemo ? (
-                        <MemoizedTableBody
-                            table={table}
-                            dataIds={dataId}
-                            hideKeys={hideKeys}
-                        />
+                        <DndContext
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis]}
+                            onDragEnd={handleDragEnd}
+                            sensors={rowSensors}
+                        >
+                            <MemoizedTableBody
+                                table={table}
+                                dataIds={dataId}
+                                hideKeys={hideKeys}
+                            />
+                        </DndContext>
                     ) : (
-                        <TableBody
-                            table={table}
-                            dataIds={dataId}
-                            hideKeys={hideKeys}
-                        />
+                        <DndContext
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis]}
+                            onDragEnd={handleDragEnd}
+                            sensors={rowSensors}
+                        >
+                            <TableBody
+                                table={table}
+                                dataIds={dataId}
+                                hideKeys={hideKeys}
+                            />
+                        </DndContext>
                     )}
                 </div>
             </div>

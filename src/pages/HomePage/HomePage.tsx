@@ -288,10 +288,10 @@ const HomePage = () => {
         calculateTotals();
     }, [commandeState]);
 
-    const handleRefresh = () => {
-        // updateCommandeOnServer();
-        queryClient.invalidateQueries({ queryKey: ["pannier"] });
-    };
+    // const handleRefresh = () => {
+    //     // updateCommandeOnServer();
+    //     queryClient.invalidateQueries({ queryKey: ["pannier"] });
+    // };
 
     const mutation = useMutation({
         mutationFn: sendToHubspot,
@@ -750,6 +750,7 @@ const HomePage = () => {
         );
     };
     console.log(sendConfirm);
+    const [isChecked, setIsChecked] = useState(false);
 
     return (
         <>
@@ -893,7 +894,26 @@ const HomePage = () => {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
+
                         <div className="flex items-center gap-4">
+                            <div className="flex gap-2 items-center">
+                                <Input
+                                    type="checkbox"
+                                    className="w-4"
+                                    checked={isChecked}
+                                    onChange={(e) =>
+                                        setIsChecked(e.target.checked)
+                                    }
+                                    id="columnDragToggle"
+                                />
+                                <Label
+                                    htmlFor="columnDragToggle"
+                                    className="text-slate-600 cursor-pointer"
+                                >
+                                    Réarranger les colonnes
+                                </Label>
+                            </div>
+
                             <Link to={"/panier/addArticle"}>
                                 <Button
                                     className=" hover:text-slate-50"
@@ -953,13 +973,13 @@ const HomePage = () => {
                                     })}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            <Button
+                            {/* <Button
                                 size={"icon"}
                                 variant={"outline"}
                                 onClick={handleRefresh}
                             >
                                 <Icon icon={"solar:refresh-linear"} />
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
 
@@ -977,6 +997,8 @@ const HomePage = () => {
                                 : []),
                         ]}
                         handleFilterChange={() => {}}
+                        isColumnDraggable={isChecked}
+                        storageKey={`${user?.email}_columnOrder`}
                     />
                     <div className=" flex flex-wrap justify-between items-end  h-[50%] w-full overflow-hidden relative gap-1 pb-2">
                         <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">

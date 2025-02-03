@@ -91,7 +91,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // setEmail("");
             setIsAuthenticated(false);
             TokenService.removeTokens();
-            window.localStorage.clear();
+            window.localStorage.removeItem("params");
+            window.localStorage.removeItem("access");
+            window.localStorage.removeItem("checkedRows");
+            window.localStorage.removeItem("defaultColumnOrder");
+            window.localStorage.removeItem("hideKeys");
+            window.localStorage.removeItem("user");
+            window.localStorage.removeItem("updatedRows");
             queryClient.clear();
         },
 
