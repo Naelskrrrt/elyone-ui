@@ -52,30 +52,55 @@ interface UserData {
 
 const HomePage = () => {
     const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeys", [
-        "mise_en_sommeil",
-        "prix_ttc",
-        "prix_achat1",
-        "dernier_prix_achat",
-        "Qtecommandeclient",
-        "QtecommandeAchat",
-        "AR_StockTerme",
-        "catalogue1_intitule",
-        "catalogue2_intitule",
-        "catalogue3_intitule",
-        "catalogue4_intitule",
-        "marque_commerciale",
-        "objectif_qtes_vendues",
-        "pourcentage_or",
-        "premiere_commercialisation",
-        "AR_InterdireCommande",
-        "AR_Exclure",
-        "dossier_hs",
-        "equivalent_75",
-        "ref_bis",
-        "remise_client",
-        "prix_vente_client",
-        "remise_categorie",
-        "remise_famille",
+        // "mise_en_sommeil",
+        // "prix_ttc",
+        // "prix_achat1",
+        // "dernier_prix_achat",
+        // "Qtecommandeclient",
+        // "QtecommandeAchat",
+        // "AR_StockTerme",
+        // "catalogue1_intitule",
+        // "catalogue2_intitule",
+        // "catalogue3_intitule",
+        // "catalogue4_intitule",
+        // "marque_commerciale",
+        // "objectif_qtes_vendues",
+        // "pourcentage_or",
+        // "premiere_commercialisation",
+        // "AR_InterdireCommande",
+        // "AR_Exclure",
+        // "dossier_hs",
+        // "equivalent_75",
+        // "ref_bis",
+        // "remise_client",
+        // "prix_vente_client",
+        // "remise_categorie",
+        // "remise_famille",
+        "3", // Mise en sommeil
+        "4", // Prix TTC
+        "6", // Prix Achat
+        "7", // Dernier Prix Achat
+        "9", // Qtecommandeclient
+        "10", // QtecommandeAchat
+        "11", // AR_StockTerme
+        "12", // catalogue1_intitule
+        "13", // catalogue2_intitule
+        "14", //   catalogue3_intitule
+        "15", // catalogue4_intitule
+        "16", // marque_commerciale
+        "17", // objectif_qtes_vendues
+        "18", // pourcentage_or
+        "19", // premiere_commercialisation
+        "20", // AR_InterdireCommande
+        "21", // AR_Exclure
+        "22", // dossier_hs
+        "23", // equivalent_75
+        "24", // ref_bis
+        "25", // remise_client
+        "26", // prix_vente_client
+        "27", // remise_categorie
+        "28", // prix_cat
+        "29", // remise_famille
     ]);
     const { params } = useUrlParams();
     const [totalPrixNet, setTotalPrixNet] = useState<number>(0);
@@ -287,11 +312,6 @@ const HomePage = () => {
 
         calculateTotals();
     }, [commandeState]);
-
-    // const handleRefresh = () => {
-    //     // updateCommandeOnServer();
-    //     queryClient.invalidateQueries({ queryKey: ["pannier"] });
-    // };
 
     const mutation = useMutation({
         mutationFn: sendToHubspot,

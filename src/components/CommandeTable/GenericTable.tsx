@@ -94,9 +94,7 @@ export default function GenericTable({
     isSortable,
     isColumnDraggable = false,
     storageKey = "defaultColumnOrder",
-}: // columnVisibility,
-// setColumnVisibility,
-{
+}: {
     columns: ColumnDef<any>[];
     data?: any;
     dataId: UniqueIdentifier[];
@@ -111,11 +109,7 @@ export default function GenericTable({
     isSortable?: boolean;
     isColumnDraggable?: boolean;
     storageKey?: string;
-    // columnVisibility: any;
-    // setColumnVisibility: any;
 }) {
-    // Draggable Column Header:
-
     const DraggableColumnHeader = ({
         header,
         hideKeys,
@@ -153,31 +147,24 @@ export default function GenericTable({
                                 ? "cursor-pointer"
                                 : ""
                         }
-                        onClick={() => {
-                            if (header.column.columnDef.enableSorting) {
-                                handleSort(header.column.id);
-                            }
-                        }}
+                        // onClick={() => {
+                        //     if (header.column.columnDef.enableSorting) {
+                        //         handleSort(header.column.id);
+                        //     }
+                        // }}
                     >
                         {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                         )}
-                        {sortState?.index === header.column.id && (
+                        {/* {sortState?.index === header.column.id && (
                             <span>
                                 {sortState?.value === "ASC" ? " 🔼" : " 🔽"}
                             </span>
-                        )}
+                        )} */}
                     </h1>
                 </div>
-                <div
-                    onDoubleClick={() => header.column.resetSize()}
-                    // onMouseDown={header.getResizeHandler()}
-                    // onTouchStart={header.getResizeHandler()}
-                    // className={`resizer  ${
-                    //     header.column.getIsResizing() ? "isResizing" : ""
-                    // }`}
-                />
+                <div onDoubleClick={() => header.column.resetSize()} />
             </div>
         );
     };
@@ -310,96 +297,93 @@ export default function GenericTable({
                                                   hideKeys={hideKeys}
                                               />
                                           ))
-                                        : headerGroup.headers.map(
-                                              (header, i) => {
-                                                  if (
-                                                      hideKeys?.includes(
-                                                          header.id
-                                                      ) ||
-                                                      header.id == "id"
-                                                  ) {
-                                                      return null;
-                                                  }
-
-                                                  return (
-                                                      <div
-                                                          key={header.id}
-                                                          className="th"
-                                                          style={{
-                                                              width: `calc(var(--header-${header.id}-size) * 1px)`,
-                                                          }}
-                                                      >
-                                                          <div className="flex flex-col gap-1 items-start pr-2">
-                                                              <h1
-                                                                  className={
-                                                                      isSortable
-                                                                          ? "cursor-pointer"
-                                                                          : ""
-                                                                  }
-                                                                  onClick={() => {
-                                                                      if (
-                                                                          header.id ===
-                                                                              "checkbox" ||
-                                                                          header.id ===
-                                                                              "actions" ||
-                                                                          header.id ===
-                                                                              "drag-handle" ||
-                                                                          header.id ===
-                                                                              "id"
-                                                                      ) {
-                                                                          return;
-                                                                      }
-
-                                                                      if (
-                                                                          isSortable
-                                                                      ) {
-                                                                          handleSort(
-                                                                              (
-                                                                                  i -
-                                                                                  1
-                                                                              ).toString()
-                                                                          );
-                                                                      }
-                                                                  }}
-                                                              >
-                                                                  {header.isPlaceholder
-                                                                      ? null
-                                                                      : flexRender(
-                                                                            header
-                                                                                .column
-                                                                                .columnDef
-                                                                                .header,
-                                                                            header.getContext()
-                                                                        )}
-
-                                                                  {/* Afficher l'icône du tri */}
-                                                                  {sortState?.index ==
-                                                                      i - 1 && (
-                                                                      <span>
-                                                                          {sortState.value ===
-                                                                          "ASC"
-                                                                              ? " 🔼"
-                                                                              : " 🔽"}
-                                                                      </span>
-                                                                  )}
-                                                              </h1>
-                                                          </div>
-                                                          <div
-                                                              onDoubleClick={() =>
-                                                                  header.column.resetSize()
-                                                              }
-                                                              onMouseDown={header.getResizeHandler()}
-                                                              onTouchStart={header.getResizeHandler()}
-                                                              className={`resizer ${
-                                                                  header.column.getIsResizing()
-                                                                      ? "isResizing"
-                                                                      : ""
-                                                              }`}
-                                                          />
-                                                      </div>
-                                                  );
+                                        : headerGroup.headers.map((header) => {
+                                              console.log(header);
+                                              console.log(hideKeys);
+                                              if (
+                                                  hideKeys?.includes(
+                                                      header.id as string
+                                                  ) ||
+                                                  header.id == "id"
+                                              ) {
+                                                  return null;
                                               }
-                                          )}
+
+                                              return (
+                                                  <div
+                                                      key={header.id}
+                                                      className="th"
+                                                      style={{
+                                                          width: `calc(var(--header-${header.id}-size) * 1px)`,
+                                                      }}
+                                                  >
+                                                      <div className="flex flex-col gap-1 items-start pr-2">
+                                                          <h1
+                                                              className={
+                                                                  isSortable
+                                                                      ? "cursor-pointer"
+                                                                      : ""
+                                                              }
+                                                              onClick={() => {
+                                                                  if (
+                                                                      header.id ===
+                                                                          "checkbox" ||
+                                                                      header.id ===
+                                                                          "actions" ||
+                                                                      header.id ===
+                                                                          "drag-handle" ||
+                                                                      header.id ===
+                                                                          "id"
+                                                                  ) {
+                                                                      return;
+                                                                  }
+
+                                                                  if (
+                                                                      isSortable
+                                                                  ) {
+                                                                      handleSort(
+                                                                          header.id.toString()
+                                                                      );
+                                                                  }
+                                                              }}
+                                                          >
+                                                              {header.isPlaceholder
+                                                                  ? null
+                                                                  : flexRender(
+                                                                        header
+                                                                            .column
+                                                                            .columnDef
+                                                                            .header,
+                                                                        header.getContext()
+                                                                    )}
+
+                                                              {/* Afficher l'icône du tri */}
+                                                              {sortState?.index ==
+                                                                  header.id && (
+                                                                  <span>
+                                                                      {sortState.value ===
+                                                                      "ASC"
+                                                                          ? " 🔼"
+                                                                          : " 🔽"}
+                                                                  </span>
+                                                              )}
+                                                          </h1>
+                                                      </div>
+                                                      <div
+                                                          onDoubleClick={() =>
+                                                              header.column.resetSize()
+                                                          }
+                                                          onMouseDown={header.getResizeHandler()}
+                                                          onTouchStart={header.getResizeHandler()}
+                                                          className={`resizer ${
+                                                              header.column.getIsResizing()
+                                                                  ? "isResizing"
+                                                                  : ""
+                                                          }`}
+                                                      />
+                                                  </div>
+                                              );
+                                          })}
                                 </SortableContext>
                             </div>
                         ))}
@@ -412,7 +396,7 @@ export default function GenericTable({
                                     className: "tr",
                                 }}
                             >
-                                {headerGroup.headers.map((header, i) => {
+                                {headerGroup.headers.map((header) => {
                                     // Vérifie si l'id du header est dans le tableau des ids à exclure
 
                                     if (
@@ -450,15 +434,13 @@ export default function GenericTable({
                                                         value={
                                                             filters
                                                                 ? filters[
-                                                                      i - 1
+                                                                      header.id
                                                                   ] || ""
                                                                 : ""
                                                         }
                                                         onChange={(e) => {
                                                             handleFilterChange(
-                                                                (
-                                                                    i - 1
-                                                                ).toString(),
+                                                                header.id.toString(),
                                                                 e.currentTarget
                                                                     .value
                                                             );

@@ -36,6 +36,7 @@ import { useLocalStorage } from "@uidotdev/usehooks";
 import { AxiosError } from "axios";
 import { Link, useNavigate } from "react-router";
 import { ArticleHistoryDialog } from "./ArticleHistoryModal/ArticleHistory";
+import { Label } from "@/components/ui/label";
 
 // type Checked = DropdownMenuCheckboxItemProps["checked"];
 
@@ -48,30 +49,31 @@ const AddArticle = () => {
     >("checkedRows", {});
     // const [order, setOrder] = useState<Record<string, string>>({});
     const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeys", [
-        "mise_en_sommeil",
-        "prix_ttc",
-        "prix_achat1",
-        "dernier_prix_achat",
-        "Qtecommandeclient",
-        "QtecommandeAchat",
-        "AR_StockTerme",
-        "catalogue1_intitule",
-        "catalogue2_intitule",
-        "catalogue3_intitule",
-        "catalogue4_intitule",
-        "marque_commerciale",
-        "objectif_qtes_vendues",
-        "pourcentage_or",
-        "premiere_commercialisation",
-        "AR_InterdireCommande",
-        "AR_Exclure",
-        "dossier_hs",
-        "equivalent_75",
-        "ref_bis",
-        "remise_client",
-        "prix_vente_client",
-        "remise_categorie",
-        "remise_famille",
+        "3", // Mise en sommeil
+        "4", // Prix TTC
+        "6", // Prix Achat
+        "7", // Dernier Prix Achat
+        "9", // Qtecommandeclient
+        "10", // QtecommandeAchat
+        "11", // AR_StockTerme
+        "12", // catalogue1_intitule
+        "13", // catalogue2_intitule
+        "14", //   catalogue3_intitule
+        "15", // catalogue4_intitule
+        "16", // marque_commerciale
+        "17", // objectif_qtes_vendues
+        "18", // pourcentage_or
+        "19", // premiere_commercialisation
+        "20", // AR_InterdireCommande
+        "21", // AR_Exclure
+        "22", // dossier_hs
+        "23", // equivalent_75
+        "24", // ref_bis
+        "25", // remise_client
+        "26", // prix_vente_client
+        "27", // remise_categorie
+        "28", // prix_cat
+        "29", // remise_famille
     ]);
 
     const { params } = useUrlParams();
@@ -269,14 +271,14 @@ const AddArticle = () => {
             },
             {
                 // 0
-                id: "reference_article",
+                id: "0",
                 accessorKey: "reference_article",
                 header: "Référence",
                 cell: (info) => info.getValue(),
             },
             {
                 // 1
-                id: "designation_article",
+                id: "1",
                 accessorKey: "designation_article",
                 header: "Désignation",
                 cell: ({ row }) => {
@@ -372,7 +374,7 @@ const AddArticle = () => {
             },
             {
                 // 2
-                id: "code_famille",
+                id: "2",
                 accessorKey: "code_famille",
                 header: "Code Famille",
                 cell: (info) => info.getValue(),
@@ -380,14 +382,14 @@ const AddArticle = () => {
             },
             {
                 // 3
-                id: "mise_en_sommeil",
+                id: "3",
                 accessorKey: "mise_en_sommeil",
                 header: "Mise en Sommeil",
                 cell: (info) => info.getValue(),
             },
             {
                 // 4
-                id: "prix_ttc",
+                id: "4",
                 accessorKey: "prix_ttc",
                 header: "PV TTC",
                 cell: (info) =>
@@ -397,7 +399,7 @@ const AddArticle = () => {
             },
             {
                 // 5
-                id: "prix_vente",
+                id: "5",
                 accessorKey: "prix_vente",
                 header: "PV HT",
                 cell: (info) =>
@@ -409,7 +411,7 @@ const AddArticle = () => {
 
             {
                 // 6
-                id: "prix_achat1",
+                id: "6",
                 accessorKey: "prix_achat1",
                 header: "Prix Achat (€)",
                 cell: ({ row }) => {
@@ -432,7 +434,7 @@ const AddArticle = () => {
             {
                 // 7
                 // PRIX UNITAIRE D'ACHAT
-                id: "dernier_prix_achat",
+                id: "7",
                 accessorKey: "dernier_prix_achat",
                 header: "Dernier Prix Achat (€)",
                 cell: ({ row }) => {
@@ -454,14 +456,14 @@ const AddArticle = () => {
             },
             {
                 // 8
-                id: "stock",
+                id: "8",
                 accessorKey: "stock",
                 header: " Qte Stock",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
             },
             {
                 // 9
-                id: "Qtecommandeclient",
+                id: "9",
                 accessorKey: "Qtecommandeclient",
                 header: "Qté Commandée Client",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
@@ -469,7 +471,7 @@ const AddArticle = () => {
             },
             {
                 // 10
-                id: "QtecommandeAchat",
+                id: "10",
                 accessorKey: "QtecommandeAchat",
                 header: "Qté Commandée Achat",
                 cell: (info) => parseInt(info.getValue<string>() || "0"),
@@ -477,7 +479,7 @@ const AddArticle = () => {
             },
             {
                 // 11 stock à terme
-                id: "AR_StockTerme",
+                id: "11",
                 accessorKey: "AR_StockTerme",
                 header: "Stock à Terme",
                 cell: (info) =>
@@ -487,28 +489,28 @@ const AddArticle = () => {
             },
             {
                 // 12
-                id: "catalogue1_intitule",
+                id: "12",
                 accessorKey: "catalogue1_intitule",
                 header: "Catalogue 1",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
                 // 13
-                id: "catalogue2_intitule",
+                id: "13",
                 accessorKey: "catalogue2_intitule",
                 header: "Catalogue 2",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
                 // 14
-                id: "catalogue3_intitule",
+                id: "14",
                 accessorKey: "catalogue3_intitule",
                 header: "Catalogue 3",
                 cell: (info) => info.getValue() || "Non renseigné",
             },
             {
                 // 15
-                id: "catalogue4_intitule",
+                id: "15",
                 accessorKey: "catalogue4_intitule",
                 header: "Catalogue 4",
                 cell: (info) => info.getValue() || "Non renseigné",
@@ -516,21 +518,21 @@ const AddArticle = () => {
 
             {
                 // 16
-                id: "marque_commerciale",
+                id: "16",
                 accessorKey: "marque_commerciale",
                 header: "Marque Commerciale",
                 cell: (info) => info.getValue(),
             },
             {
                 // 17
-                id: "objectif_qtes_vendues",
+                id: "17",
                 accessorKey: "objectif_qtes_vendues",
                 header: "Objectif/Qtés Vendues",
                 cell: (info) => info.getValue(),
             },
             {
                 // 18
-                id: "pourcentage_or",
+                id: "18",
                 accessorKey: "pourcentage_or",
                 header: "Pourcentage OR",
                 cell: (info) =>
@@ -541,21 +543,21 @@ const AddArticle = () => {
 
             {
                 // 19
-                id: "premiere_commercialisation",
+                id: "19",
                 accessorKey: "premiere_commercialisation",
                 header: "1ère Comm",
                 cell: (info) => info.getValue(),
             },
             {
                 // 20
-                id: "AR_InterdireCommande",
+                id: "20",
                 accessorKey: "AR_InterdireCommande",
                 header: "Commande Interdite",
                 cell: (info) => info.getValue(),
             },
             {
                 // 21
-                id: "AR_Exclure",
+                id: "21",
                 accessorKey: "AR_Exclure",
                 header: "Exclure",
                 cell: (info) => info.getValue(),
@@ -563,7 +565,7 @@ const AddArticle = () => {
 
             {
                 // 22
-                id: "dossier_hs",
+                id: "22",
                 accessorKey: "dossier_hs",
                 header: "Dossier HS",
                 cell: (info) => info.getValue(),
@@ -571,42 +573,42 @@ const AddArticle = () => {
 
             {
                 // 23
-                id: "equivalent_75",
+                id: "23",
                 accessorKey: "equivalent_75",
                 header: "Équivalent 75",
                 cell: (info) => info.getValue(),
             },
             {
                 // 24
-                id: "ref_bis",
+                id: "24",
                 accessorKey: "ref_bis",
                 header: "Référence Bis",
                 cell: (info) => info.getValue(),
             },
             {
                 // 25
-                id: "remise_client",
+                id: "25",
                 accessorKey: "remise_client",
                 header: "Remise Client",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
                 // 26
-                id: "prix_vente_client",
+                id: "26",
                 accessorKey: "prix_vente_client",
                 header: "Prix Client",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
                 // 27
-                id: "remise_categorie",
+                id: "27",
                 accessorKey: "remise_categorie",
                 header: "Remise Catégorie",
                 cell: (info) => info.getValue() || "Aucune",
             },
             {
                 // 28
-                id: "prix_cat",
+                id: "28",
                 accessorKey: "prix_cat",
                 header: "Prix Catégorie",
                 cell: ({ row }) =>
@@ -617,7 +619,7 @@ const AddArticle = () => {
             },
             {
                 // 29
-                id: "remise_famille",
+                id: "29",
                 accessorKey: "remise_famille",
                 header: "Remise Famille",
                 cell: (info) => info.getValue() || "Aucune",
@@ -625,7 +627,7 @@ const AddArticle = () => {
 
             {
                 // 30
-                id: "remise_finale",
+                id: "30",
                 accessorKey: "remise_finale",
                 header: "Remise Finale (%)",
                 cell: ({ row }) => {
@@ -738,7 +740,7 @@ const AddArticle = () => {
 
             {
                 // 31
-                id: "prix_final",
+                id: "31",
                 accessorKey: "prix_final",
                 header: "Prix Final (€)",
                 cell: ({ row }) => {
@@ -852,7 +854,7 @@ const AddArticle = () => {
 
             {
                 // 32
-                id: "prix_net",
+                id: "32",
                 accessorKey: "prix_net",
                 header: "Prix Net (€)",
                 cell: ({ row }) => {
@@ -911,6 +913,8 @@ const AddArticle = () => {
 
     console.log(articles?.empty_columns);
 
+    const [isChecked, setIsChecked] = useState(false);
+
     return (
         <div className="flex w-full relative h-full bg-slate-200 flex-col gap-1 overflow-y-auto px-3 py-1">
             <div className="w-full overflow-x-auto h-full px-2 py-1 flex flex-col gap-2 rounded-md border-2 bg-white border-slate-100">
@@ -935,6 +939,21 @@ const AddArticle = () => {
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <div className="flex gap-2 items-center">
+                            <Input
+                                type="checkbox"
+                                className="w-4"
+                                checked={isChecked}
+                                onChange={(e) => setIsChecked(e.target.checked)}
+                                id="columnDragToggle"
+                            />
+                            <Label
+                                htmlFor="columnDragToggle"
+                                className="text-slate-600 cursor-pointer"
+                            >
+                                Réarranger les colonnes
+                            </Label>
+                        </div>
                         <Button
                             size={"icon"}
                             variant={"outline"}
@@ -1004,6 +1023,8 @@ const AddArticle = () => {
                     handleSort={handleSort}
                     sortState={sortState}
                     isSortable={true}
+                    isColumnDraggable={isChecked}
+                    storageKey={`${user?.email}_columnOrder_article`}
                 />
 
                 <div className="flex items-center  justify-between flex-wrap">

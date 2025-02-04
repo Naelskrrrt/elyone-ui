@@ -123,7 +123,7 @@ const AddArticle = () => {
             },
             {
                 // 0
-                id: "date_achat",
+                id: "0",
                 accessorKey: "date_achat",
                 header: "Date d'achat",
                 cell: ({ row }) => {
@@ -138,14 +138,14 @@ const AddArticle = () => {
 
             {
                 // 1
-                id: "numero_document",
+                id: "1",
                 accessorKey: "numero_document",
                 header: "N° de document",
                 cell: (info) => info.getValue(),
             },
             {
                 // 2
-                id: "reference_article",
+                id: "2",
                 accessorKey: "reference_article",
                 header: "Référence",
                 cell: (info) => info.getValue(),
@@ -153,7 +153,7 @@ const AddArticle = () => {
 
             {
                 // 3
-                id: "designation_article",
+                id: "3",
                 accessorKey: "designation_article",
                 header: "Désignation",
                 cell: (info) => info.getValue(),
@@ -161,7 +161,7 @@ const AddArticle = () => {
             },
             {
                 // 4
-                id: "quantite_achat",
+                id: "4",
                 accessorKey: "quantite_achat",
                 header: "Quantité",
                 cell: (info) =>
@@ -169,7 +169,7 @@ const AddArticle = () => {
             },
             {
                 // 5
-                id: "prix_achat",
+                id: "5",
                 accessorKey: "prix_achat",
                 header: "Prix Unit.",
                 cell: (info) =>
@@ -179,7 +179,7 @@ const AddArticle = () => {
             },
             {
                 // 6
-                id: "remise",
+                id: "6",
                 accessorKey: "remise",
                 header: "Rémise",
                 cell: (info) => parseInt(info.getValue<string>() || "0") + " %",
@@ -187,7 +187,7 @@ const AddArticle = () => {
             },
             {
                 // 7
-                id: "prix_remise",
+                id: "7",
                 accessorKey: "prix_remise",
                 header: "Prix Remisé",
                 cell: (info) => parseInt(info.getValue<string>() || "0") + " €",
@@ -195,7 +195,7 @@ const AddArticle = () => {
             },
             {
                 // 9
-                id: "total_ht_net",
+                id: "9",
                 accessorKey: "total_ht_net",
                 header: "Total Net",
                 cell: (info) => parseInt(info.getValue<string>() || "0") + " €",
