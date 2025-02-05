@@ -9,7 +9,7 @@ echo "Creating an optimized production build..."
 pnpm run build
 
 echo "Deploying the build to the server..."
-scp -P 222 -r dist/* root@137.74.220.203:/var/www/html/
+scp -P 222 -r dist/* root@137.74.220.203:/var/www/cpq-elyone/client
 
 echo "Send Modification to Github"
 git add .

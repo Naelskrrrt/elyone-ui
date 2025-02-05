@@ -1,6 +1,5 @@
 import { apiPannier } from "@/infra/ApiClient";
 import { FetchCommandesResponse, SendArticleToHubspot } from "@/types/Article";
-import axios from "axios";
 
 export const fetchCommandes = async (params: {
     uuid: string;
@@ -34,10 +33,7 @@ export const deleteCommandes = async (
 };
 
 export const sendToHubspot = async (data: SendArticleToHubspot) => {
-    const response = await axios.post(
-        import.meta.env.VITE_API_URL + "/cart/send-to-hubspot",
-        data
-    );
+    const response = await apiPannier.post("/cart/sendToHubspot", data);
 
     return response.data;
 };

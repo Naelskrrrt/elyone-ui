@@ -51,33 +51,11 @@ interface UserData {
 }
 
 const HomePage = () => {
-    const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeys", [
-        // "mise_en_sommeil",
-        // "prix_ttc",
-        // "prix_achat1",
-        // "dernier_prix_achat",
-        // "Qtecommandeclient",
-        // "QtecommandeAchat",
-        // "AR_StockTerme",
-        // "catalogue1_intitule",
-        // "catalogue2_intitule",
-        // "catalogue3_intitule",
-        // "catalogue4_intitule",
-        // "marque_commerciale",
-        // "objectif_qtes_vendues",
-        // "pourcentage_or",
-        // "premiere_commercialisation",
-        // "AR_InterdireCommande",
-        // "AR_Exclure",
-        // "dossier_hs",
-        // "equivalent_75",
-        // "ref_bis",
-        // "remise_client",
-        // "prix_vente_client",
-        // "remise_categorie",
-        // "remise_famille",
+    const [hideKeys, setHideKeys] = useLocalStorage<string[]>("hideKeyPanier", [
+        "2", // Code Famille
         "3", // Mise en sommeil
         "4", // Prix TTC
+        "5", // Prix Vente
         "6", // Prix Achat
         "7", // Dernier Prix Achat
         "9", // Qtecommandeclient
