@@ -6,16 +6,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { useLocalStorage } from "@uidotdev/usehooks";
+import { useSessionStorage } from "@uidotdev/usehooks";
 import React, { createContext, useContext, useEffect, useState } from "react";
-// import { v4 as uuidv4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 interface UrlParams {
     ct_num: string;
     deal_id: string;
     hubspot_id: string;
     owner_email: string;
-    // iv: string;
 }
 
 interface UrlParamsContextProps {
@@ -23,104 +22,114 @@ interface UrlParamsContextProps {
     setParams: React.Dispatch<React.SetStateAction<UrlParams | null>>;
 }
 
-// Créez le contexte
 const UrlParamsContext = createContext<UrlParamsContextProps | undefined>(
     undefined
 );
 
-// Fournisseur du contexte
 export const UrlParamsProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const [params, setParams] = useLocalStorage<UrlParams | null>(
-        "params",
+    // Génération d'un ID unique pour l'onglet
+    const [tabId] = useState(() => {
+        const storedTabId = sessionStorage.getItem("hubspotTabId");
+        return storedTabId || uuidv4();
+    });
+
+    // Stockage dans sessionStorage avec la clé unique
+    const [params, setParams] = useSessionStorage<UrlParams | null>(
+        `params-${tabId}`,
         null
     );
+
     const [missingParams, setMissingParams] = useState<string[]>([]);
 
+    // Synchronisation de l'ID d'onglet dans sessionStorage
     useEffect(() => {
-        const checkParams = () => {
-            const searchParams = new URLSearchParams(window.location.search);
-            const requiredParams = [
-                { key: "id_erp", name: "ID ERP" },
-                { key: "deal_id", name: "ID Deal" },
-                { key: "hubspot_id", name: "ID Hubspot" },
-                // { key: "iv", name: "IV" },
-                // { key: "owner_email", name: "Email propriétaire" },
-            ];
+        sessionStorage.setItem("hubspotTabId", tabId);
+    }, [tabId]);
 
-            const missing = requiredParams
-                .filter((param) => !searchParams.has(param.key))
-                .map((param) => param.name);
-
-            setMissingParams(missing);
-        };
-
-        if (!params) {
-            checkParams();
-        }
-    }, [params]);
-
+    // Vérification et initialisation des paramètres
     useEffect(() => {
-        if (!params && missingParams.length === 0) {
-            const searchParams = new URLSearchParams(window.location.search);
-            if (searchParams.get("id_erp") === null) return;
-            if (searchParams.get("deal_id") === null) return;
-            if (searchParams.get("hubspot_id") === null) return;
-            // if (searchParams.get("owner_email") === null) return;
-            const ct_num =
-                searchParams.get("id_erp") || searchParams.get("ct_num") || "";
-            const deal_id = searchParams.get("deal_id") || "";
-            const hubspot_id = searchParams.get("hubspot_id") || "";
-            const owner_email = searchParams.get("owner_email") || "";
-            // const iv = searchParams.get("iv") || "";
+        const searchParams = new URLSearchParams(window.location.search);
 
-            setParams({
-                ct_num,
-                deal_id,
-                hubspot_id,
-                owner_email,
-                // iv,
-            });
+        const requiredParams = ["id_erp", "deal_id", "hubspot_id"];
+        const missing = requiredParams.filter(
+            (param) => !searchParams.get(param)
+        );
+
+        if (missing.length === 0 && !params) {
+            // Si tous les paramètres sont présents et `params` n'est pas encore défini
+            const newParams = {
+                ct_num: searchParams.get("id_erp") || "",
+                deal_id: searchParams.get("deal_id") || "",
+                hubspot_id: searchParams.get("hubspot_id") || "",
+                owner_email: searchParams.get("owner_email") || "",
+            };
+            setParams(newParams);
+        } else if (missing.length > 0 && !params) {
+            // Détection des paramètres manquants uniquement si `params` est vide
+            setMissingParams(
+                missing.map((param) => {
+                    switch (param) {
+                        case "id_erp":
+                            return "ID ERP";
+                        case "deal_id":
+                            return "ID Deal";
+                        case "hubspot_id":
+                            return "ID Hubspot";
+                        default:
+                            return "";
+                    }
+                })
+            );
         }
-    }, [params, setParams, missingParams]);
+    }, [params, setParams]);
+
+    // Logs pour débogage
+    useEffect(() => {
+        console.log("ID d'onglet actuel:", tabId);
+        console.log("Paramètres stockés:", params);
+    }, [params, tabId]);
+
     return (
         <UrlParamsContext.Provider value={{ params, setParams }}>
-            {/* Dialogue d'avertissement */}
-            <Dialog open={missingParams.length > 0}>
-                <DialogContent className="sm:max-w-[425px] backdrop:blur-md">
-                    <DialogHeader>
-                        <DialogTitle>Paramètres manquants</DialogTitle>
-                        <DialogDescription>
-                            Les paramètres suivants sont requis mais manquants
-                            dans l'URL :
-                        </DialogDescription>
-                    </DialogHeader>
+            {/* Affichage du dialogue uniquement si les paramètres sont manquants et non stockés */}
+            {missingParams.length > 0 && !params && (
+                <Dialog open={missingParams.length > 0 && !params}>
+                    <DialogContent className="sm:max-w-[425px] backdrop:blur-md">
+                        <DialogHeader>
+                            <DialogTitle>Paramètres manquants</DialogTitle>
+                            <DialogDescription>
+                                Les paramètres suivants sont requis mais
+                                manquants dans l'URL :
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="grid gap-2 py-4">
-                        <ul className="list-disc pl-4 text-red-500">
-                            {missingParams.map((param, index) => (
-                                <li key={index}>{param}</li>
-                            ))}
-                        </ul>
-                        <p className="text-sm text-muted-foreground">
-                            Utiliser le lien dans Hubspot pour vous connecter à
-                            cette applications
-                        </p>
-                    </div>
+                        <div className="grid gap-2 py-4">
+                            <ul className="list-disc pl-4 text-red-500">
+                                {missingParams.map((param, index) => (
+                                    <li key={index}>{param}</li>
+                                ))}
+                            </ul>
+                            <p className="text-sm text-muted-foreground">
+                                Veuillez utiliser le lien généré par HubSpot
+                                pour accéder à cette application.
+                            </p>
+                        </div>
 
-                    <div className="flex justify-end">
-                        <a href="https://www.hubspot.com">
-                            <Button
-                                variant="default"
-                                className="bg-hubspot-500 hover:bg-hubspot-500/80"
-                            >
-                                Allez vers Hubspot
-                            </Button>
-                        </a>
-                    </div>
-                </DialogContent>
-            </Dialog>
+                        <div className="flex justify-end">
+                            <a href="https://www.hubspot.com">
+                                <Button
+                                    variant="default"
+                                    className="bg-hubspot-500 hover:bg-hubspot-500/80"
+                                >
+                                    Allez vers HubSpot
+                                </Button>
+                            </a>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             {children}
         </UrlParamsContext.Provider>

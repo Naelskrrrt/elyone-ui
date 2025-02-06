@@ -187,7 +187,7 @@ const AddArticle = () => {
     const handleSendArticle = () => {
         const dataToSend = Object.entries(updatedRows).map(([_, value]) => ({
             ...value,
-            uuid: user?.email,
+            uuid: params?.deal_id,
         })) as Article[];
         console.log(dataToSend);
         mutation.mutate(dataToSend);

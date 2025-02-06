@@ -100,7 +100,7 @@ const HomePage = () => {
     }, []);
 
     const { data: commande, isLoading } = usePannier({
-        uuid: user?.email as string,
+        uuid: params?.deal_id as string,
     });
 
     const { data: articles } = useArticles({
@@ -241,7 +241,7 @@ const HomePage = () => {
             const response = await fetch(
                 `${import.meta.env.VITE_API_URL}/api/pannier?articleId=${
                     article.id
-                }&uuid=${user.email}`,
+                }&uuid=${params?.deal_id}`,
                 {
                     method: "PUT",
                     headers: {
@@ -308,7 +308,7 @@ const HomePage = () => {
             queryClient.invalidateQueries({ queryKey: ["articles"] });
             const articleIds = commandeState?.map((item) => item.id) || [];
             // TODO: Vider le panier dans le backend
-            handleDeleteRow(articleIds, user.email as string);
+            handleDeleteRow(articleIds, params?.deal_id as string);
             setIsConfirmDialogOpen(false);
         },
         onError: (error: AxiosError) => {
@@ -723,7 +723,7 @@ const HomePage = () => {
                             onClick={() => {
                                 handleDeleteRow(
                                     [row.original.id as number],
-                                    user.email
+                                    params?.deal_id as string
                                 );
                             }}
                             size={"icon"}
