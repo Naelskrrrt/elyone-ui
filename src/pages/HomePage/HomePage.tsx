@@ -235,7 +235,7 @@ const HomePage = () => {
     };
 
     const updateSingleArticle = async (article: Commandes) => {
-        if (!user?.email) return;
+        if (!params?.deal_id) return;
 
         try {
             const response = await fetch(
@@ -777,7 +777,12 @@ const HomePage = () => {
                             open={isConfirmDialogOpen}
                             onOpenChange={setIsConfirmDialogOpen}
                         >
-                            <DialogTrigger asChild>
+                            <DialogTrigger
+                                asChild
+                                disabled={
+                                    !commandeState || commandeState.length == 0
+                                }
+                            >
                                 <Button
                                     className="bg-green-500  font-medium hover:bg-green-500/85 hover:text-slate-50"
                                     size={"sm"}
@@ -853,8 +858,15 @@ const HomePage = () => {
                                     <Button
                                         type="submit"
                                         onClick={handleSendHubspot}
+                                        disabled={mutation.isPending}
                                     >
-                                        Envoyer
+                                        {mutation.isPending ? (
+                                            <span className="animate-fade">
+                                                Chargement...
+                                            </span>
+                                        ) : (
+                                            "Envoyer"
+                                        )}
                                     </Button>
                                 </DialogFooter>
                             </DialogContent>

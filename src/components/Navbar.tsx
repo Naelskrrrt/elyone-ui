@@ -1,17 +1,11 @@
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthProvider";
 import { useUrlParams } from "@/context/UrlParamsContext";
 import { useFetchClient } from "@/hooks/useFetchUsers";
+import { Icon } from "@iconify/react/dist/iconify.js";
+import { QueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router";
 import { Button } from "./ui/button";
-import { Icon } from "@iconify/react/dist/iconify.js";
-import { useAuth } from "@/context/AuthProvider";
-import { usePannier } from "@/hooks/usePannier";
-import { useEffect, useState } from "react";
-import { Commandes } from "@/types/Article";
-import { deleteCommandes } from "@/api/commandeApi";
-import { toast } from "sonner";
-import { QueryClient } from "@tanstack/react-query";
-import { jwtDecode } from "jwt-decode";
 
 const Navbar = () => {
     const where = useLocation();
@@ -19,38 +13,39 @@ const Navbar = () => {
     const { logout } = useAuth();
     const queryClient = new QueryClient();
 
-    const [commandeState, setCommande] = useState<Commandes[] | null>(null);
-    const [userData, setUser] = useState<any | null>(null);
+    // OPTIONAL: Effacer les contenus du panier
+    // const [commandeState, setCommande] = useState<Commandes[] | null>(null);
+    // const [userData, setUser] = useState<any | null>(null);
 
-    useEffect(() => {
-        const token = window.localStorage.getItem("access");
-        const user = jwtDecode<any>(token as string);
-        setUser(user);
-    }, []);
+    // useEffect(() => {
+    //     const token = window.localStorage.getItem("access");
+    //     const user = jwtDecode<any>(token as string);
+    //     setUser(user);
+    // }, []);
 
-    const { data: commande } = usePannier({
-        uuid: userData?.email as string,
-    });
+    // OPTIONAL: Effacer les contenus du panier
 
-    useEffect(() => {
-        if (commande?.articles) {
-            setCommande(commande.articles);
-        }
-        console.log(commande);
-    }, [commande?.articles]);
+    // const { data: commande } = usePannier({
+    //     uuid: userData?.email as string,
+    // });
+    // useEffect(() => {
+    //     if (commande?.articles) {
+    //         setCommande(commande.articles);
+    //     }
+    //     console.log(commande);
+    // }, [commande?.articles]);
+    // const handleDeleteRow = async (articleId: number[], uuid: string) => {
+    //     if (!uuid) return;
 
-    const handleDeleteRow = async (articleId: number[], uuid: string) => {
-        if (!uuid) return;
-
-        const response = await deleteCommandes(articleId.join(","), uuid);
-        toast.success("Article supprimé !");
-        queryClient.invalidateQueries({ queryKey: ["pannier"] });
-        console.log(response);
-        if (response.success == false) {
-            toast.error("Échec de la suppression");
-        }
-        return response;
-    };
+    //     const response = await deleteCommandes(articleId.join(","), uuid);
+    //     toast.success("Article supprimé !");
+    //     queryClient.invalidateQueries({ queryKey: ["pannier"] });
+    //     console.log(response);
+    //     if (response.success == false) {
+    //         toast.error("Échec de la suppression");
+    //     }
+    //     return response;
+    // };
 
     const {
         data: user,
@@ -127,12 +122,15 @@ const Navbar = () => {
                             queryClient.invalidateQueries({
                                 queryKey: ["articles"],
                             });
-                            const articleIds =
-                                commandeState?.map((item) => item.id) || [];
-                            handleDeleteRow(
-                                articleIds,
-                                userData.email as string
-                            );
+
+                            // OPTIONAL: Effacer les contenus du panier
+
+                            // const articleIds =
+                            //     commandeState?.map((item) => item.id) || [];
+                            // handleDeleteRow(
+                            //     articleIds,
+                            //     userData.email as string
+                            // );
                         }}
                     >
                         <Icon icon={"lucide:log-out"} />

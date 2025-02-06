@@ -89,8 +89,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         mutationFn: async () => {
             // await authService.logout();
             // setEmail("");
+
+            const tabId = sessionStorage.getItem("hubspotTabId");
+
+            const clearSessionStorage = (tabId: string) => {
+                sessionStorage.removeItem("hubspotTabId");
+                sessionStorage.removeItem(`params-${tabId}`);
+            };
             setIsAuthenticated(false);
             TokenService.removeTokens();
+            clearSessionStorage(tabId as string);
             window.localStorage.removeItem("params");
             window.localStorage.removeItem("access");
             window.localStorage.removeItem("checkedRows");
