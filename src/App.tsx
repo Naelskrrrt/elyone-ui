@@ -9,6 +9,8 @@ const SignIn = lazy(() => import("./pages/Auth/sign-in"));
 import Loader from "./components/loader/loader";
 import HistoriqueArticle from "./pages/HistoriqueArticle/HistoriqueArticle";
 import ProtectedRoute from "./core/secure/ProtectedRoute";
+import ErrorBoundary from "./ErrorBoundary";
+import Error404 from "./ErrorNotFound";
 
 const router = createBrowserRouter([
     {
@@ -19,23 +21,41 @@ const router = createBrowserRouter([
         path: "/panier",
         element: (
             <ProtectedRoute>
-                <HomeLayout />
+                <ErrorBoundary>
+                    <HomeLayout />
+                </ErrorBoundary>
             </ProtectedRoute>
         ),
         children: [
             {
                 path: "",
-                element: <HomePage />,
+                element: (
+                    <ErrorBoundary>
+                        <HomePage />,
+                    </ErrorBoundary>
+                ),
             },
             {
                 path: "addArticle",
-                element: <AddArticle />,
+                element: (
+                    <ErrorBoundary>
+                        <AddArticle />,
+                    </ErrorBoundary>
+                ),
             },
             {
                 path: "history",
-                element: <HistoriqueArticle />,
+                element: (
+                    <ErrorBoundary>
+                        <HistoriqueArticle />,
+                    </ErrorBoundary>
+                ),
             },
         ],
+    },
+    {
+        path: "*",
+        element: <Error404 />,
     },
 ]);
 

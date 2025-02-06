@@ -512,7 +512,7 @@ function TableBody({
             }}
             className="max-h-[calc(100%-50px)] relative overflow-y-auto overflow-x-hidden w-full pb-14 mr-3"
         >
-            {table.getRowModel() !== undefined ? (
+            {table.getRowModel() || table.getRowModel() !== undefined ? (
                 table.getRowModel().rows &&
                 table.getRowModel().rows.length !== 0 ? (
                     dataIds ? (

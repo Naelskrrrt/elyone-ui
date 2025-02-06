@@ -528,7 +528,7 @@ const AddArticle = () => {
                 id: "17",
                 accessorKey: "objectif_qtes_vendues",
                 header: "Objectif/Qtés Vendues",
-                cell: (info) => info.getValue(),
+                cell: (info) => formatNumber(info.getValue() as number),
             },
             {
                 // 18
@@ -576,7 +576,7 @@ const AddArticle = () => {
                 id: "23",
                 accessorKey: "equivalent_75",
                 header: "Équivalent 75",
-                cell: (info) => info.getValue(),
+                cell: (info) => formatNumber(info.getValue() as number),
             },
             {
                 // 24
@@ -597,7 +597,8 @@ const AddArticle = () => {
                 id: "26",
                 accessorKey: "prix_vente_client",
                 header: "Prix Client",
-                cell: (info) => info.getValue() || "Aucune",
+                cell: (info) =>
+                    formatNumber(info.getValue() as number) + " €" || "Aucune",
             },
             {
                 // 27
@@ -845,7 +846,7 @@ const AddArticle = () => {
                                 parseFloat(
                                     row.original.prix_final as string
                                 ).toFixed(2)
-                            ) || 0}
+                            ) + " €" || 0}
                         </span>
                     );
                 },

@@ -145,6 +145,15 @@ const HomePage = () => {
                 (item) => String(item.id) === over.id
             );
 
+            if (
+                oldIndex === -1 ||
+                newIndex === -1 ||
+                !commandeState[oldIndex] ||
+                !commandeState[newIndex]
+            ) {
+                console.error("Invalid drag operation");
+                return;
+            }
             if (oldIndex === -1 || newIndex === -1) return;
 
             // Création d'un nouveau tableau pour éviter les mutations directes
@@ -971,13 +980,6 @@ const HomePage = () => {
                                     })}
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                            {/* <Button
-                                size={"icon"}
-                                variant={"outline"}
-                                onClick={handleRefresh}
-                            >
-                                <Icon icon={"solar:refresh-linear"} />
-                            </Button> */}
                         </div>
                     </div>
 
