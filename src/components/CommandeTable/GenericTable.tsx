@@ -333,7 +333,9 @@ export default function GenericTable({
                                                                       header.id ===
                                                                           "drag-handle" ||
                                                                       header.id ===
-                                                                          "id"
+                                                                          "id" ||
+                                                                      header.id ===
+                                                                          "quantite"
                                                                   ) {
                                                                       return;
                                                                   }
@@ -421,7 +423,9 @@ export default function GenericTable({
                                         >
                                             <div className="flex flex-col gap-1 items-start pr-2 py-2">
                                                 {header.column.columnDef.id ===
-                                                "checkbox" ? (
+                                                    "checkbox" ||
+                                                header.column.columnDef.id ===
+                                                    "quantite" ? (
                                                     ""
                                                 ) : (
                                                     <Input

@@ -1,21 +1,61 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 
 const HomePage = lazy(() => import("./pages/HomePage/HomePage"));
 const HomeLayout = lazy(() => import("./pages/HomeLayout"));
 const AddArticle = lazy(() => import("./pages/AddArticle/AddArticle"));
 const SignIn = lazy(() => import("./pages/Auth/sign-in"));
+const HistoriqueArticle = lazy(
+    () => import("./pages/HistoriqueArticle/HistoriqueArticle")
+);
+
+const ModifyPassword = lazy(
+    () => import("./pages/ModifyPassword/modifyPassword")
+);
 
 import Loader from "./components/loader/loader";
-import HistoriqueArticle from "./pages/HistoriqueArticle/HistoriqueArticle";
 import ProtectedRoute from "./core/secure/ProtectedRoute";
 import ErrorBoundary from "./ErrorBoundary";
 import Error404 from "./ErrorNotFound";
+import {
+    GiveEmail,
+    NewPassword,
+    UseOtp,
+} from "./pages/ResetPassword/GiveEmail";
+import { Toaster } from "sonner";
+import { RecoveryProvider } from "./context/RecoveryContexte";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <SignIn />,
+    },
+    {
+        path: "/modify-password",
+        element: <ModifyPassword />,
+    },
+    {
+        path: "/reset-password",
+        element: (
+            <RecoveryProvider>
+                <Outlet />
+                <Toaster position="top-right" closeButton richColors />
+            </RecoveryProvider>
+        ),
+        children: [
+            {
+                path: "",
+                element: <GiveEmail />,
+            },
+            {
+                path: "otp",
+                element: <UseOtp />,
+            },
+            {
+                path: "new-password",
+                element: <NewPassword />,
+            },
+        ],
     },
     {
         path: "/panier",

@@ -20,7 +20,7 @@ const SignIn = () => {
     return (
         <div className="bg-bg-pattern w-full h-screen bg-cover flex flex-col items-center justify-center overflow-y-auto">
             <div className="container flex justify-center">
-                <div className="w-fit h-[500px] border-2 rounded-xl bg-slate-50/30 backdrop-blur-sm flex items-center overflow-hidden p-1 gap-6">
+                <div className="w-fit h-min-[500px] border-2 rounded-xl bg-slate-50/30 backdrop-blur-sm flex items-center overflow-hidden p-1 gap-6">
                     <div className="flex w-full h-full relative flex-col items-center lg:items-start p-3 px-8 py-4">
                         <form
                             className="w-full relative flex items-center justify-center lg:items-start py-2 flex-col gap-10"
@@ -98,6 +98,20 @@ const SignIn = () => {
                                                 {errors.password.message}
                                             </div>
                                         )}
+                                    </div>
+                                    <div>
+                                        <span className="text-xs">
+                                            Mot de passe oublié ?
+                                        </span>
+                                        <Button
+                                            variant="link"
+                                            className="text-blue-500 text-xs"
+                                            size={"sm"}
+                                        >
+                                            <Link to="/reset-password">
+                                                Recuperez votre compte !
+                                            </Link>
+                                        </Button>
                                     </div>
                                 </div>
                             </div>

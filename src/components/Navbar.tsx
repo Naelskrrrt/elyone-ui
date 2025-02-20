@@ -13,40 +13,6 @@ const Navbar = () => {
     const { logout } = useAuth();
     const queryClient = new QueryClient();
 
-    // OPTIONAL: Effacer les contenus du panier
-    // const [commandeState, setCommande] = useState<Commandes[] | null>(null);
-    // const [userData, setUser] = useState<any | null>(null);
-
-    // useEffect(() => {
-    //     const token = window.localStorage.getItem("access");
-    //     const user = jwtDecode<any>(token as string);
-    //     setUser(user);
-    // }, []);
-
-    // OPTIONAL: Effacer les contenus du panier
-
-    // const { data: commande } = usePannier({
-    //     uuid: userData?.email as string,
-    // });
-    // useEffect(() => {
-    //     if (commande?.articles) {
-    //         setCommande(commande.articles);
-    //     }
-    //     console.log(commande);
-    // }, [commande?.articles]);
-    // const handleDeleteRow = async (articleId: number[], uuid: string) => {
-    //     if (!uuid) return;
-
-    //     const response = await deleteCommandes(articleId.join(","), uuid);
-    //     toast.success("Article supprimé !");
-    //     queryClient.invalidateQueries({ queryKey: ["pannier"] });
-    //     console.log(response);
-    //     if (response.success == false) {
-    //         toast.error("Échec de la suppression");
-    //     }
-    //     return response;
-    // };
-
     const {
         data: user,
         isLoading,
@@ -109,8 +75,20 @@ const Navbar = () => {
                     </Link>
                 </div>
             </div>
-            <div className="flex gap-16 items-center">
-                <Link to={"/"}>
+            <div className="flex gap-3 items-center">
+                <Link
+                    to={"/modify-password"}
+                    title="Modifier le mot de passe de l'utilisateur"
+                >
+                    <Button
+                        size={"icon"}
+                        className="bg-nextblue-100 text-nextblue-500 hover:bg-nextblue-100/85"
+                        onClick={() => {}}
+                    >
+                        <Icon icon={"lucide:cog"} />
+                    </Button>
+                </Link>
+                <Link to={"/"} title="Déconnexion">
                     <Button
                         size={"icon"}
                         className="bg-red-100 text-red-500 hover:bg-red-100/85"
@@ -122,15 +100,6 @@ const Navbar = () => {
                             queryClient.invalidateQueries({
                                 queryKey: ["articles"],
                             });
-
-                            // OPTIONAL: Effacer les contenus du panier
-
-                            // const articleIds =
-                            //     commandeState?.map((item) => item.id) || [];
-                            // handleDeleteRow(
-                            //     articleIds,
-                            //     userData.email as string
-                            // );
                         }}
                     >
                         <Icon icon={"lucide:log-out"} />

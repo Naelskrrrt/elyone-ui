@@ -161,7 +161,10 @@ const AddArticle = () => {
         if (!checkedState[articleId]) {
             setUpdatedRows((prev) => ({
                 ...prev,
-                [articleId]: { ...row },
+                [articleId]: {
+                    ...row,
+                    quantite: (row.quantite || 1).toString(),
+                }, // Assurez-vous que la quantité est initialisée
             }));
         } else {
             setUpdatedRows((prev) => {
@@ -239,6 +242,7 @@ const AddArticle = () => {
         setUpdatedRows((prev) => ({
             ...prev,
             [rowId]: {
+                ...prev[rowId],
                 ...rowData,
             },
         }));
@@ -269,6 +273,7 @@ const AddArticle = () => {
                 enableResizing: false,
                 enableHiding: false,
             },
+
             {
                 // 0
                 id: "0",
@@ -373,6 +378,107 @@ const AddArticle = () => {
                 size: 350,
             },
             {
+                // Quantité
+                id: "quantite",
+                accessorKey: "quantite",
+                header: "Quantité",
+                cell: ({ row }) => {
+                    const defaultValue =
+                        updatedRows[row.original.reference_article as string]
+                            ?.quantite ||
+                        row.original.quantite ||
+                        "1";
+                    const [quantite, setQuantite] = useState<any>(
+                        parseInt(defaultValue)
+                    );
+
+                    const onSubmit = (data: any) => {
+                        toast.info("Quantité mise à jour");
+                        updateRowData(
+                            row.original.reference_article as string,
+                            {
+                                ...row.original,
+                                quantite: data.quantite,
+                                remise_finale:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.remise_finale ||
+                                    row.original.remise_finale ||
+                                    "",
+                                designation_article:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.designation_article ||
+                                    row.original.designation_article ||
+                                    "",
+                                prix_final:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.prix_final ||
+                                    row.original.prix_final ||
+                                    "",
+                                prix_net:
+                                    updatedRows[
+                                        row.original.reference_article as string
+                                    ]?.prix_net ||
+                                    row.original.prix_net ||
+                                    "",
+                            }
+                        );
+                    };
+
+                    const isChecked =
+                        checkedState[row.original.reference_article || ""];
+
+                    const submitCondition =
+                        quantite == row.original.quantite ||
+                        !updatedRows[row.original.reference_article as string]
+                            ?.quantite;
+                    if (isChecked)
+                        return (
+                            <div className="flex gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <Input
+                                        type="number"
+                                        // {...field}
+                                        value={quantite}
+                                        onChange={(e) => {
+                                            setQuantite(e.target.value);
+                                        }}
+                                        className="w-full text-left mr-2 "
+                                        min={1}
+                                    />
+                                    <p
+                                        className={
+                                            !submitCondition
+                                                ? "text-[9px] text-nextblue-500"
+                                                : "hidden"
+                                        }
+                                    >
+                                        Enregistrer avant de continuer.
+                                    </p>
+                                </div>
+
+                                {!submitCondition ? (
+                                    <Button
+                                        type="submit"
+                                        disabled={!quantite}
+                                        onClick={() =>
+                                            onSubmit({ quantite: quantite })
+                                        }
+                                    >
+                                        <Icon icon={"lucide:save"} />
+                                    </Button>
+                                ) : (
+                                    ""
+                                )}
+                            </div>
+                        );
+                    return <span>{quantite}</span>;
+                },
+                size: 200,
+            },
+            {
                 // 2
                 id: "2",
                 accessorKey: "code_famille",
@@ -380,6 +486,7 @@ const AddArticle = () => {
                 cell: (info) => info.getValue(),
                 size: 150,
             },
+
             {
                 // 3
                 id: "3",

@@ -310,6 +310,13 @@ const HomePage = () => {
             // TODO: Vider le panier dans le backend
             handleDeleteRow(articleIds, params?.deal_id as string);
             setIsConfirmDialogOpen(false);
+            // Afficher une boîte de dialogue de confirmation
+            const confirmRedirect = window.confirm(
+                "Voulez-vous être redirigé vers Votre Transaction HubSpot ?"
+            );
+            if (confirmRedirect) {
+                window.location.href = `https://app.hubspot.com/contacts/${params?.hubspot_id}/record/0-3/${params?.deal_id}/`;
+            }
         },
         onError: (error: AxiosError) => {
             if (error.status === 500)
