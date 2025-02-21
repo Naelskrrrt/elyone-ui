@@ -13,7 +13,9 @@ const ModifyPassword = lazy(
     () => import("./pages/ModifyPassword/modifyPassword")
 );
 
+import { Toaster } from "sonner";
 import Loader from "./components/loader/loader";
+import { RecoveryProvider } from "./context/RecoveryContexte";
 import ProtectedRoute from "./core/secure/ProtectedRoute";
 import ErrorBoundary from "./ErrorBoundary";
 import Error404 from "./ErrorNotFound";
@@ -22,8 +24,7 @@ import {
     NewPassword,
     UseOtp,
 } from "./pages/ResetPassword/GiveEmail";
-import { Toaster } from "sonner";
-import { RecoveryProvider } from "./context/RecoveryContexte";
+import ErrorUnauthorized from "./ErrorUnauthorized";
 
 const router = createBrowserRouter([
     {
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
     {
         path: "/modify-password",
         element: <ModifyPassword />,
+    },
+    {
+        path: "/unauthorized",
+        element: <ErrorUnauthorized />,
     },
     {
         path: "/reset-password",

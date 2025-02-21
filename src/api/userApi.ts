@@ -88,3 +88,25 @@ export const resetPassword = async ({
     );
     return response;
 };
+
+export const verifyAccess = async ({
+    email,
+    hubspot_id,
+}: {
+    email: string;
+    hubspot_id: string | number;
+}) => {
+    const response = await axios.post(
+        import.meta.env.VITE_API_URL + "/api/verify-access",
+        {
+            email: email,
+            hubspot_id: hubspot_id,
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+    return response;
+};
