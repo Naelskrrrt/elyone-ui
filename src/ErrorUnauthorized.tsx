@@ -9,9 +9,7 @@ const ErrorUnauthorized: React.FC = () => {
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
             <div className="text-center">
-                <h1 className="text-6xl font-extrabold text-nextblue-300">
-                    403
-                </h1>
+                <h1 className="text-6xl font-extrabold text-orange-300">403</h1>
                 <p className="mt-4 text-lg text-gray-600">
                     Oups, Vous n'avez pas accès à cette Transaction.
                 </p>
@@ -22,6 +20,7 @@ const ErrorUnauthorized: React.FC = () => {
                 <div className="mt-6 flex justify-center space-x-4">
                     <Button
                         variant="default"
+                        className="bg-orange-500 hover:bg-orange-500/90"
                         onClick={() => {
                             logout();
                             navigate("/");

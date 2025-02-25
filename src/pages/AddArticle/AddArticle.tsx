@@ -328,17 +328,23 @@ const AddArticle = () => {
                         checkedState[row.original.reference_article || ""];
 
                     const submitCondition =
-                        design == row.original.designation_article ||
-                        !updatedRows[row.original.reference_article as string]
+                        design ==
+                        updatedRows[row.original.reference_article as string]
                             ?.designation_article;
 
+                    console.log(submitCondition);
                     if (isChecked)
                         return (
-                            <div className="flex gap-4 w-full mr-2">
-                                <div className="flex flex-col gap-1 w-full ">
+                            <form
+                                className="flex gap-4 w-full mr-2"
+                                onSubmit={() =>
+                                    onSubmit({ designation: design })
+                                }
+                            >
+                                <div className="flex flex-col gap-1 w-full mr-2">
                                     <Input
                                         value={design}
-                                        className="mx-2 w-full"
+                                        className="mx-2 w-full mr-2"
                                         onChange={(e) =>
                                             setDesign(e.target.value)
                                         }
@@ -355,23 +361,20 @@ const AddArticle = () => {
                                     </p>
                                 </div>
 
-                                {design == row.original.designation_article ||
-                                !updatedRows[
-                                    row.original.reference_article as string
-                                ]?.designation_article ? (
+                                {submitCondition ? (
                                     ""
                                 ) : (
                                     <Button
                                         disabled={!design}
                                         type="submit"
-                                        onClick={() =>
-                                            onSubmit({ designation: design })
-                                        }
+                                        // onClick={() =>
+                                        //     onSubmit({ designation: design })
+                                        // }
                                     >
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </div>
+                            </form>
                         );
                     return <span>{row.original.designation_article}</span>;
                 },
@@ -431,13 +434,18 @@ const AddArticle = () => {
                         checkedState[row.original.reference_article || ""];
 
                     const submitCondition =
-                        quantite == row.original.quantite ||
-                        !updatedRows[row.original.reference_article as string]
+                        quantite ==
+                        updatedRows[row.original.reference_article as string]
                             ?.quantite;
                     if (isChecked)
                         return (
-                            <div className="flex gap-2">
-                                <div className="flex flex-col gap-1">
+                            <form
+                                className="flex gap-2"
+                                onSubmit={() =>
+                                    onSubmit({ quantite: quantite })
+                                }
+                            >
+                                <div className="flex flex-col gap-1 mr-2">
                                     <Input
                                         type="number"
                                         // {...field}
@@ -463,16 +471,16 @@ const AddArticle = () => {
                                     <Button
                                         type="submit"
                                         disabled={!quantite}
-                                        onClick={() =>
-                                            onSubmit({ quantite: quantite })
-                                        }
+                                        // onClick={() =>
+                                        //     onSubmit({ quantite: quantite })
+                                        // }
                                     >
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 ) : (
                                     ""
                                 )}
-                            </div>
+                            </form>
                         );
                     return <span>{quantite}</span>;
                 },
@@ -745,7 +753,7 @@ const AddArticle = () => {
                         row.original.remise_finale ||
                         "";
                     const [remise, setRemise] = useState<any>(
-                        parseFloat(defaultValue as string).toFixed(2) || 0
+                        parseInt(defaultValue as string) || 0
                     );
                     const prixFinal = parseFloat(
                         updatedRows[row.original.reference_article as string]
@@ -789,13 +797,18 @@ const AddArticle = () => {
 
                     const submitCondition =
                         remise ==
-                        parseFloat(
-                            row.original.remise_finale as string
-                        ).toFixed(2);
+                        parseInt(
+                            updatedRows[
+                                row.original.reference_article as string
+                            ]?.remise_finale as string
+                        );
 
                     if (isChecked)
                         return (
-                            <div className="flex gap-2">
+                            <form
+                                className="flex gap-2"
+                                onSubmit={() => onSubmit({ remise })}
+                            >
                                 <div className="flex flex-col gap-1">
                                     <Input
                                         type="number"
@@ -817,21 +830,18 @@ const AddArticle = () => {
                                     </p>
                                 </div>
 
-                                {remise ==
-                                parseFloat(
-                                    row.original.remise_finale as string
-                                ).toFixed(2) ? (
+                                {submitCondition ? (
                                     ""
                                 ) : (
                                     <Button
                                         type="submit"
                                         disabled={!remise}
-                                        onClick={() => onSubmit({ remise })}
+                                        // onClick={}
                                     >
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </div>
+                            </form>
                         );
                     return (
                         <span>
@@ -902,13 +912,21 @@ const AddArticle = () => {
                         checkedState[row.original.reference_article || ""];
 
                     const submitCondition =
-                        parseFloat(row.original.prix_final as string).toFixed(
-                            2
-                        ) === prixFinal;
+                        prixFinal ==
+                        parseFloat(
+                            updatedRows[
+                                row.original.reference_article as string
+                            ]?.prix_final as string
+                        );
 
                     if (isChecked)
                         return (
-                            <div className=" flex gap-2">
+                            <form
+                                className=" flex gap-2"
+                                onSubmit={() =>
+                                    onSubmit({ prixFinal: prixFinal })
+                                }
+                            >
                                 <div className="flex flex-col gap-1">
                                     <Input
                                         type="number"
@@ -930,22 +948,14 @@ const AddArticle = () => {
                                     </p>
                                 </div>
 
-                                {parseFloat(
-                                    row.original.prix_final as string
-                                ).toFixed(2) === prixFinal ? (
+                                {submitCondition ? (
                                     ""
                                 ) : (
-                                    <Button
-                                        type="submit"
-                                        disabled={!prixFinal}
-                                        onClick={() =>
-                                            onSubmit({ prixFinal: prixFinal })
-                                        }
-                                    >
+                                    <Button type="submit" disabled={!prixFinal}>
                                         <Icon icon={"lucide:save"} />
                                     </Button>
                                 )}
-                            </div>
+                            </form>
                         );
                     return (
                         <span>
