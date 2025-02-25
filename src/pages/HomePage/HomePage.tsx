@@ -368,7 +368,10 @@ const HomePage = () => {
                         design == row.original.designation_article;
 
                     return (
-                        <div className="flex gap-4 w-full mr-2">
+                        <form
+                            className="flex gap-4 w-full mr-4"
+                            onSubmit={() => onSubmit({ designation: design })}
+                        >
                             <div className="flex flex-col gap-1 w-full ">
                                 <Input
                                     value={design}
@@ -390,17 +393,11 @@ const HomePage = () => {
                             {submitCondition ? (
                                 ""
                             ) : (
-                                <Button
-                                    disabled={!design}
-                                    type="submit"
-                                    onClick={() =>
-                                        onSubmit({ designation: design })
-                                    }
-                                >
+                                <Button disabled={!design} type="submit">
                                     <Icon icon={"lucide:save"} />
                                 </Button>
                             )}
-                        </div>
+                        </form>
                     );
                 },
                 size: 250,
@@ -476,7 +473,10 @@ const HomePage = () => {
                     const submitCondition = quantite == row.original.quantite;
 
                     return (
-                        <div className="flex gap-2">
+                        <form
+                            className="flex gap-2 mr-4"
+                            onSubmit={() => onSubmit({ quantite: quantite })}
+                        >
                             <div className="flex flex-col gap-1">
                                 <Input
                                     type="number"
@@ -488,31 +488,25 @@ const HomePage = () => {
                                     className="w-full text-left mr-2 "
                                     min={1}
                                 />
-                                <p
+                                {/* <p
                                     className={
                                         !submitCondition
-                                            ? "text-[9px] text-nextblue-500"
+                                            ? "text-[8px] text-nextblue-500"
                                             : "hidden"
                                     }
                                 >
                                     Enregistrer avant de continuer.
-                                </p>
+                                </p> */}
                             </div>
 
                             {!submitCondition ? (
-                                <Button
-                                    type="submit"
-                                    disabled={!quantite}
-                                    onClick={() =>
-                                        onSubmit({ quantite: quantite })
-                                    }
-                                >
+                                <Button type="submit" disabled={!quantite}>
                                     <Icon icon={"lucide:save"} />
                                 </Button>
                             ) : (
                                 ""
                             )}
-                        </div>
+                        </form>
                     );
                 },
                 size: 200,
@@ -556,13 +550,16 @@ const HomePage = () => {
                         });
                     };
 
-                    const submitCondition =
-                        parseFloat(row.original.prix_final as string).toFixed(
-                            2
-                        ) === prixFinal;
+                    // const submitCondition =
+                    //     parseFloat(row.original.prix_final as string).toFixed(
+                    //         2
+                    //     ) === prixFinal;
 
                     return (
-                        <div className=" flex gap-2">
+                        <form
+                            className=" flex gap-2 mr-4"
+                            onSubmit={() => onSubmit({ prixFinal: prixFinal })}
+                        >
                             <div className="flex flex-col gap-1">
                                 <Input
                                     type="number"
@@ -573,15 +570,6 @@ const HomePage = () => {
                                     }
                                     title="Enregistrer avant de continuer"
                                 />
-                                <p
-                                    className={
-                                        submitCondition
-                                            ? "hidden"
-                                            : "text-[9px] text-nextblue-500"
-                                    }
-                                >
-                                    Enregistrer avant de continuer.
-                                </p>
                             </div>
 
                             {parseFloat(
@@ -589,17 +577,11 @@ const HomePage = () => {
                             ).toFixed(2) === prixFinal ? (
                                 ""
                             ) : (
-                                <Button
-                                    type="submit"
-                                    disabled={!prixFinal}
-                                    onClick={() =>
-                                        onSubmit({ prixFinal: prixFinal })
-                                    }
-                                >
+                                <Button type="submit" disabled={!prixFinal}>
                                     <Icon icon={"lucide:save"} />
                                 </Button>
                             )}
-                        </div>
+                        </form>
                     );
                 },
                 size: 200,
@@ -648,7 +630,10 @@ const HomePage = () => {
                         ).toFixed(2);
 
                     return (
-                        <div className="flex gap-2">
+                        <form
+                            className="flex gap-2"
+                            onSubmit={() => onSubmit({ remise })}
+                        >
                             <div className="flex flex-col gap-1">
                                 <Input
                                     type="number"
@@ -678,15 +663,11 @@ const HomePage = () => {
                             ).toFixed(2) ? (
                                 ""
                             ) : (
-                                <Button
-                                    type="submit"
-                                    disabled={!remise}
-                                    onClick={() => onSubmit({ remise })}
-                                >
+                                <Button type="submit" disabled={!remise}>
                                     <Icon icon={"lucide:save"} />
                                 </Button>
                             )}
-                        </div>
+                        </form>
                     );
                 },
                 size: 300,
