@@ -593,10 +593,10 @@ const AddArticle = () => {
                 size: 200,
             },
             {
-                // 11 stock à terme
+                // 11 Stock Réel
                 id: "11",
                 accessorKey: "AR_StockTerme",
-                header: "Stock à Terme",
+                header: "Stock Réel",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -745,7 +745,7 @@ const AddArticle = () => {
                 // 30
                 id: "30",
                 accessorKey: "remise_finale",
-                header: "Remise Finale (%)",
+                header: "Remise appliquée HT (%)",
                 cell: ({ row }) => {
                     const defaultValue =
                         updatedRows[row.original.reference_article as string]
@@ -860,7 +860,7 @@ const AddArticle = () => {
                 // 31
                 id: "31",
                 accessorKey: "prix_final",
-                header: "Prix Final (€)",
+                header: "Prix appliqué HT  (€)",
                 cell: ({ row }) => {
                     const defaultValue =
                         updatedRows[row.original.reference_article as string]
@@ -1002,7 +1002,7 @@ const AddArticle = () => {
             {
                 id: "actions",
                 accessorKey: "actions",
-                header: "Actions",
+                header: "Historiques",
                 cell: ({ row }) => {
                     return (
                         <ArticleHistoryDialog
@@ -1036,6 +1036,10 @@ const AddArticle = () => {
     return (
         <div className="flex w-full relative h-full bg-slate-200 flex-col gap-1 overflow-y-auto px-3 py-1">
             <div className="w-full overflow-x-auto h-full px-2 py-1 flex flex-col gap-2 rounded-md border-2 bg-white border-slate-100">
+                <h1 className="text-slate-800 font-bold text-2xl ml-2 my-2">
+                    Ajouter des articles 📜
+                </h1>
+
                 <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50 pt-1">
                     <div className="flex gap-2">
                         <Link to={"/panier"}>
@@ -1203,7 +1207,7 @@ const AddArticle = () => {
                     )}
                 </div>
                 {Object.values(checkedState).some((isChecked) => isChecked) && (
-                    <div className="flex gap-2 flex-row">
+                    <div className="flex gap-2 flex-row justify-end">
                         <Button
                             onClick={handleCancel}
                             className="bg-red-400/20 text-red-500 font-semibold hover:bg-red-400/30"

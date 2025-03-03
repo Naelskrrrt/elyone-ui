@@ -40,12 +40,12 @@ const Navbar = () => {
                             </span>
                         ) : (
                             <>
-                                <span className="text-slate-400 text-xs font-semibold">
-                                    Client
-                                </span>
                                 <h1 className="text-nextblue-500 font-bold text-xl">
                                     {!user ? "-" : user?.client_name}
                                 </h1>
+                                <span className="text-slate-400 text-xs font-bold">
+                                    {params?.hubspot_id}
+                                </span>
                             </>
                         )}
                     </div>
@@ -56,22 +56,22 @@ const Navbar = () => {
                         className={
                             where.pathname == "/panier" ||
                             where.pathname == "/panier/addArticle"
-                                ? "text-nextblue-500 text-sm font-semibold bg-nextblue-50 h-fit w-fit px-8 py-2 rounded-full"
+                                ? "text-white text-sm font-semibold bg-nextblue-500 h-fit w-fit px-8 py-2 rounded-full"
                                 : "text-slate-500 text-sm font-medium  h-fit w-fit px-8 py-2 rounded-full"
                         }
                     >
-                        Panier
+                        Saisie de Commande
                     </Link>
                     <Link
                         to={"/panier/history"}
                         className={
                             where.pathname == "/panier/history"
-                                ? "text-nextblue-500 text-sm font-semibold bg-nextblue-50 h-fit w-fit px-8 py-2 rounded-full"
+                                ? "text-white text-sm font-semibold bg-nextblue-500 h-fit w-fit px-8 py-2 rounded-full"
                                 : "text-slate-500 text-sm font-medium  h-fit w-fit px-8 py-2 rounded-full"
                         }
                     >
                         {" "}
-                        Historique
+                        Historique de Commande
                     </Link>
                 </div>
             </div>

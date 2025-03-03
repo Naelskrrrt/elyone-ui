@@ -17,7 +17,6 @@ import { Toaster } from "sonner";
 import Loader from "./components/loader/loader";
 import { RecoveryProvider } from "./context/RecoveryContexte";
 import ProtectedRoute from "./core/secure/ProtectedRoute";
-import ErrorBoundary from "./ErrorBoundary";
 import Error404 from "./ErrorNotFound";
 import {
     GiveEmail,
@@ -66,35 +65,21 @@ const router = createBrowserRouter([
         path: "/panier",
         element: (
             <ProtectedRoute>
-                <ErrorBoundary>
-                    <HomeLayout />
-                </ErrorBoundary>
+                <HomeLayout />
             </ProtectedRoute>
         ),
         children: [
             {
                 path: "",
-                element: (
-                    <ErrorBoundary>
-                        <HomePage />,
-                    </ErrorBoundary>
-                ),
+                element: <HomePage />,
             },
             {
                 path: "addArticle",
-                element: (
-                    <ErrorBoundary>
-                        <AddArticle />,
-                    </ErrorBoundary>
-                ),
+                element: <AddArticle />,
             },
             {
                 path: "history",
-                element: (
-                    <ErrorBoundary>
-                        <HistoriqueArticle />,
-                    </ErrorBoundary>
-                ),
+                element: <HistoriqueArticle />,
             },
         ],
     },

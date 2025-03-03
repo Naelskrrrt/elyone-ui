@@ -434,10 +434,10 @@ const HomePage = () => {
             },
 
             {
-                // 11 stock à terme
+                // 11 Stock Réel
                 id: "AR_StockTerme",
                 accessorKey: "AR_StockTerme",
-                header: "Stock à Terme",
+                header: "Stock Réel",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -677,7 +677,7 @@ const HomePage = () => {
                 // 32
                 id: "prix_net",
                 accessorKey: "prix_net",
-                header: "PU Remisé",
+                header: "PU HT Remisé",
                 cell: ({ row }) => {
                     return (
                         formatNumber(
@@ -716,6 +716,7 @@ const HomePage = () => {
                             }}
                             size={"icon"}
                             className="bg-red-100 text-red-500 hover:bg-red-100/80"
+                            title="Supprimer l'article"
                         >
                             <Icon icon={"lucide:trash"} />
                         </Button>
@@ -750,17 +751,116 @@ const HomePage = () => {
     return (
         <>
             <div className="flex w-full relative h-full  flex-col gap-0  overflow-y-auto px-3  py-3">
-                {/* <div className="py-4 px-5 flex flex-col h-fit w-fit gap-2  rounded-md border-2 bg-white border-slate-100">
-                        <p className="text-slate-900 text-sm font-medium ">
-                            {" "}
-                            Article du client
-                        </p>
-                        <h2 className="text-3xl font-bold text-nextblue-500">
-                            {"John Doe"}
-                        </h2>
-                    </div> */}
                 <div className="w-full overflow-x-auto h-full px-2 py-1 flex flex-col gap-2 rounded-md border-2 bg-white border-slate-100">
                     <div className="w-full flex justify-between h-fit sticky left-0 top-0 z-50 pt-1 flex-wrap">
+                        <div className="w-full flex justify-between items-center gap-2 ">
+                            <div className="flex flex-col items-end w-full ">
+                                <div>
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            type="checkbox"
+                                            className="w-4"
+                                            checked={isChecked}
+                                            onChange={(e) =>
+                                                setIsChecked(e.target.checked)
+                                            }
+                                            id="columnDragToggle"
+                                        />
+                                        <Label
+                                            htmlFor="columnDragToggle"
+                                            className="text-slate-600 cursor-pointer"
+                                        >
+                                            Réarranger les colonnes
+                                        </Label>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <Link to={"/panier/addArticle"}>
+                                            <Button
+                                                className=" hover:text-slate-50"
+                                                size={"sm"}
+                                            >
+                                                <Icon
+                                                    icon={"lucide:plus"}
+                                                    width={24}
+                                                    height={24}
+                                                    // className="scale-125"
+                                                />
+                                                Ajouter un article
+                                            </Button>
+                                        </Link>
+                                        <DropdownMenu modal={false}>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant={"secondary"}>
+                                                    {" "}
+                                                    Colonnes à afficher
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="w-60 h-96 z-50 bg-white overflow-y-auto">
+                                                <DropdownMenuLabel className="sticky -top-1 z-50 bg-white py-1">
+                                                    Colonnes à afficher
+                                                </DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                {columns.map((col) => {
+                                                    if (
+                                                        (articles?.empty_columns &&
+                                                            Object.keys(
+                                                                articles.empty_columns
+                                                            ).includes(
+                                                                col.id as string
+                                                            )) ||
+                                                        col.id == "checkbox" ||
+                                                        col.id == "actions" ||
+                                                        col.id == "drag-handle"
+                                                    )
+                                                        return null;
+                                                    return (
+                                                        <DropdownMenuCheckboxItem
+                                                            key={col.id}
+                                                            checked={
+                                                                !hideKeys.includes(
+                                                                    col.id as string
+                                                                )
+                                                            }
+                                                            onCheckedChange={() =>
+                                                                handleToggleColumnVisibility(
+                                                                    col.id as string
+                                                                )
+                                                            }
+                                                        >
+                                                            {typeof col.header ===
+                                                            "string"
+                                                                ? col.header
+                                                                : col.id}
+                                                        </DropdownMenuCheckboxItem>
+                                                    );
+                                                })}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <GenericTable
+                        handleSort={() => {}}
+                        columns={columns}
+                        data={commandeState || []}
+                        handleDragEnd={handleDragEnd}
+                        dataId={dataIds}
+                        isLoading={isLoading}
+                        hideKeys={[
+                            ...hideKeys,
+                            ...(commande?.empty_columns
+                                ? Object.keys(commande.empty_columns)
+                                : []),
+                        ]}
+                        handleFilterChange={() => {}}
+                        isColumnDraggable={isChecked}
+                        storageKey={`${user?.email}_columnOrder`}
+                    />
+                    <div className="w-full flex justify-end">
                         <Dialog
                             open={isConfirmDialogOpen}
                             onOpenChange={setIsConfirmDialogOpen}
@@ -797,21 +897,6 @@ const HomePage = () => {
                                 <div className="flex flex-col">
                                     <div className="flex gap-2 items-center">
                                         <Input
-                                            id="isSyncErp"
-                                            type="checkbox"
-                                            className="w-4"
-                                            checked={sendConfirm.isSyncErp}
-                                            onChange={handleCheckboxChange}
-                                        />
-                                        <Label
-                                            htmlFor="isSyncErp"
-                                            className="text-right"
-                                        >
-                                            Synchronisé avec l'ERP.
-                                        </Label>
-                                    </div>
-                                    <div className="flex gap-2 items-center">
-                                        <Input
                                             id="isClearCart"
                                             type="checkbox"
                                             className="w-4"
@@ -820,10 +905,22 @@ const HomePage = () => {
                                         />
                                         <Label
                                             htmlFor="isClearCart"
-                                            className="text-right"
+                                            // className="text-right"
                                         >
-                                            Effacer la cart avant d'ajouter les
-                                            données.
+                                            Vider la transaction hubspot avant
+                                            d’inserer ce panier
+                                        </Label>
+                                    </div>
+                                    <div className="flex gap-2 items-center">
+                                        <Input
+                                            id="isSyncErp"
+                                            type="checkbox"
+                                            className="w-4"
+                                            checked={sendConfirm.isSyncErp}
+                                            onChange={handleCheckboxChange}
+                                        />
+                                        <Label htmlFor="isSyncErp">
+                                            Synchroniser avec l'ERP.
                                         </Label>
                                     </div>
                                 </div>
@@ -901,105 +998,7 @@ const HomePage = () => {
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
-
-                        <div className="flex items-center gap-4">
-                            <div className="flex gap-2 items-center">
-                                <Input
-                                    type="checkbox"
-                                    className="w-4"
-                                    checked={isChecked}
-                                    onChange={(e) =>
-                                        setIsChecked(e.target.checked)
-                                    }
-                                    id="columnDragToggle"
-                                />
-                                <Label
-                                    htmlFor="columnDragToggle"
-                                    className="text-slate-600 cursor-pointer"
-                                >
-                                    Réarranger les colonnes
-                                </Label>
-                            </div>
-
-                            <Link to={"/panier/addArticle"}>
-                                <Button
-                                    className=" hover:text-slate-50"
-                                    size={"sm"}
-                                >
-                                    <Icon
-                                        icon={"lucide:plus"}
-                                        width={24}
-                                        height={24}
-                                        // className="scale-125"
-                                    />
-                                    Ajouter un article
-                                </Button>
-                            </Link>
-                            <DropdownMenu modal={false}>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant={"secondary"}>
-                                        {" "}
-                                        Colonnes à afficher
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-60 h-96 z-50 bg-white overflow-y-auto">
-                                    <DropdownMenuLabel className="sticky -top-1 z-50 bg-white py-1">
-                                        Colonnes à afficher
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    {columns.map((col) => {
-                                        if (
-                                            (articles?.empty_columns &&
-                                                Object.keys(
-                                                    articles.empty_columns
-                                                ).includes(col.id as string)) ||
-                                            col.id == "checkbox" ||
-                                            col.id == "actions" ||
-                                            col.id == "drag-handle"
-                                        )
-                                            return null;
-                                        return (
-                                            <DropdownMenuCheckboxItem
-                                                key={col.id}
-                                                checked={
-                                                    !hideKeys.includes(
-                                                        col.id as string
-                                                    )
-                                                }
-                                                onCheckedChange={() =>
-                                                    handleToggleColumnVisibility(
-                                                        col.id as string
-                                                    )
-                                                }
-                                            >
-                                                {typeof col.header === "string"
-                                                    ? col.header
-                                                    : col.id}
-                                            </DropdownMenuCheckboxItem>
-                                        );
-                                    })}
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
                     </div>
-
-                    <GenericTable
-                        handleSort={() => {}}
-                        columns={columns}
-                        data={commandeState || []}
-                        handleDragEnd={handleDragEnd}
-                        dataId={dataIds}
-                        isLoading={isLoading}
-                        hideKeys={[
-                            ...hideKeys,
-                            ...(commande?.empty_columns
-                                ? Object.keys(commande.empty_columns)
-                                : []),
-                        ]}
-                        handleFilterChange={() => {}}
-                        isColumnDraggable={isChecked}
-                        storageKey={`${user?.email}_columnOrder`}
-                    />
                     <div className=" flex flex-wrap justify-between items-end  h-[50%] w-full overflow-hidden relative gap-1 pb-2">
                         <div className="bg-slate-100 w-1/5 min-w-[200px] h-fit py-2 px-3 rounded-md">
                             <h1 className="font-semibold text-slate-400 text-lg">
