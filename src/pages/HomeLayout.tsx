@@ -1,4 +1,5 @@
 import { verifyAccess } from "@/api/userApi";
+import Loader from "@/components/loader/loader";
 import Navbar from "@/components/Navbar";
 import { useUrlParams } from "@/context/UrlParamsContext";
 import { useMutation } from "@tanstack/react-query";
@@ -12,6 +13,7 @@ const HomeLayout = () => {
     );
 
     const { params } = useUrlParams();
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const mutation = useMutation({
@@ -27,21 +29,27 @@ const HomeLayout = () => {
     });
 
     useEffect(() => {
+        setLoading(true);
         if (params?.hubspot_id) {
             mutation.mutate({
                 email: user.email,
                 hubspot_id: params.hubspot_id,
             });
         }
+        setLoading(false);
     }, [user]);
 
     console.table(user);
     return (
         <>
-            <div className="w-screen h-screen  relative flex flex-col  overflow-hidden bg-slate-100">
-                <Navbar />
-                <Outlet />
-            </div>
+            {loading ? (
+                <Loader />
+            ) : (
+                <div className="w-screen h-screen  relative flex flex-col  overflow-hidden bg-slate-100">
+                    <Navbar />
+                    <Outlet />
+                </div>
+            )}
         </>
     );
 };
