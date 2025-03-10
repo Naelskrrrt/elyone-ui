@@ -425,7 +425,7 @@ const HomePage = () => {
                 // 5
                 id: "prix_vente",
                 accessorKey: "prix_vente",
-                header: "PV HT",
+                header: "Prix net HT",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -437,7 +437,7 @@ const HomePage = () => {
                 // 11 Stock Réel
                 id: "AR_StockTerme",
                 accessorKey: "AR_StockTerme",
-                header: "Stock Réel",
+                header: "Stock à terme",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -591,7 +591,7 @@ const HomePage = () => {
                 // 30
                 id: "remise_finale",
                 accessorKey: "remise_finale",
-                header: "Remise Finale (%)",
+                header: "Remise Consentie (%)",
                 cell: ({ row }) => {
                     const defaultValue = row.original.remise_finale || "";
                     const [remise, setRemise] = useState<any>(
@@ -600,7 +600,7 @@ const HomePage = () => {
                     const prixFinal = parseFloat(row.original.prix_final || "");
 
                     const onSubmit = (data: any) => {
-                        toast.info("Remise Finale mise à jour");
+                        toast.info("Remise Consentie mise à jour");
                         updateRowData(row.original.id as number, {
                             ...row.original,
                             remise_finale: data.remise,
@@ -677,7 +677,7 @@ const HomePage = () => {
                 // 32
                 id: "prix_net",
                 accessorKey: "prix_net",
-                header: "PU HT Remisé",
+                header: "Prix net HT Remisé",
                 cell: ({ row }) => {
                     return (
                         formatNumber(
@@ -770,7 +770,7 @@ const HomePage = () => {
                                             htmlFor="columnDragToggle"
                                             className="text-slate-600 cursor-pointer"
                                         >
-                                            Réarranger les colonnes
+                                            Réorganiser les colonnes
                                         </Label>
                                     </div>
 

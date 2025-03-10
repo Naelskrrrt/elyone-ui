@@ -516,7 +516,7 @@ const AddArticle = () => {
                 // 5
                 id: "5",
                 accessorKey: "prix_vente",
-                header: "PV HT",
+                header: "Prix net HT",
                 cell: (info) =>
                     formatNumber(
                         parseFloat(info.getValue<string>() || "0").toFixed(2)
@@ -763,7 +763,7 @@ const AddArticle = () => {
                     );
 
                     const onSubmit = (data: any) => {
-                        toast.info("Remise Finale mise à jour");
+                        toast.info("Remise Consentie mise à jour");
                         updateRowData(
                             row.original.reference_article as string,
                             {
@@ -1046,7 +1046,7 @@ const AddArticle = () => {
                             <Button variant={"link"}>
                                 {" "}
                                 <Icon icon={"solar:arrow-left-linear"} />
-                                Liste des Commandes
+                                Retour à la Commande
                             </Button>
                         </Link>
                         <Button
@@ -1073,7 +1073,7 @@ const AddArticle = () => {
                                 htmlFor="columnDragToggle"
                                 className="text-slate-600 cursor-pointer"
                             >
-                                Réarranger les colonnes
+                                Réorganiser les colonnes
                             </Label>
                         </div>
                         <Button

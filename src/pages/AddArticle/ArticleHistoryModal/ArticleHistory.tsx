@@ -41,7 +41,7 @@ export function ArticleHistoryDialog({
     dayjs.locale("fr");
 
     const columns = useMemo<ColumnDef<ArticleHistory>[]>(
-        // Designation, remise finale, prix finale = prix net
+        // Designation, Remise Consentie, prix finale = prix net
         () => [
             {
                 id: "date_achat",
